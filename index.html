@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>デイリークエスト管理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Kaku Gothic ProN', sans-serif;
+            background: linear-gradient(to bottom right, #f0f9ff, #e0e7ff);
+            min-height: 100vh;
+            padding: 1rem;
+        }
+
+        .container {
+            max-width: 42rem;
+            margin: 0 auto;
+        }
+
+        /* ヘッダー */
+        .header {
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+
+        @media (min-width: 640px) {
+            .header h1 {
+                font-size: 1.875rem;
+            }
+        }
+
+        .progress-info {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.875rem;
+            color: #4b5563;
+            margin-bottom: 0.75rem;
+        }
+
+        .progress-count {
+            font-weight: 700;
+            color: #4f46e5;
+        }
+
+        .reset-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            font-size: 0.875rem;
+            background-color: #fef2f2;
+            color: #dc2626;
+            border: none;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: background-color 150ms;
+        }
+
+        .reset-btn:hover {
+            background-color: #fee2e2;
+        }
+
+        .progress-bar {
+            display: none;
+            background-color: #f3f4f6;
+            border-radius: 9999px;
+            height: 0.5rem;
+            overflow: hidden;
+            margin-top: 0.75rem;
+        }
+
+        .progress-bar.active {
+            display: block;
+        }
+
+        .progress-fill {
+            background-color: #4f46e5;
+            height: 100%;
+            transition: width 300ms;
+        }
+
+        /* ゲーム追加フォーム */
+        .add-game-form {
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .add-game-form input {
+            flex: 1;
+            padding: 0.5rem 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            outline: none;
+            transition: ring 150ms;
+        }
+
+        @media (min-width: 640px) {
+            .add-game-form input {
+                font-size: 1rem;
+            }
+        }
+
+        .add-game-form input:focus {
+            box-shadow: 0 0 0 2px #4f46e5;
+        }
+
+        .add-game-btn {
+            padding: 0.5rem 1rem;
+            background-color: #4f46e5;
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: background-color 150ms;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .add-game-btn:hover {
+            background-color: #4338ca;
+        }
+
+        .btn-text {
+            display: none;
+        }
+
+        @media (min-width: 640px) {
+            .btn-text {
+                display: inline;
+            }
+        }
+
+        /* ゲームリスト */
+        .games-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .empty-message {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #9ca3af;
+        }
+
+        /* ゲームカード */
+        .game-card {
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        .game-header {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: white;
+            border: none;
+            cursor: pointer;
+            text-align: left;
+            transition: background-color 150ms;
+        }
+
+        @media (min-width: 640px) {
+            .game-header {
+                padding: 1rem;
+            }
+        }
+
+        .game-header:hover {
+            background-color: #f9fafb;
+        }
+
+        .game-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .game-name {
+            font-weight: 600;
+            color: #1f2937;
+            font-size: 0.875rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        @media (min-width: 640px) {
+            .game-name {
+                font-size: 1rem;
+            }
+        }
+
+        .game-progress {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+        }
+
+        @media (min-width: 640px) {
+            .game-progress {
+                font-size: 0.875rem;
+            }
+        }
+
+        .game-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-left: 0.5rem;
+        }
+
+        .delete-game-btn {
+            padding: 0.375rem;
+            background: none;
+            border: none;
+            color: #9ca3af;
+            cursor: pointer;
+            transition: color 150ms, background-color 150ms;
+            border-radius: 0.375rem;
+        }
+
+        .delete-game-btn:hover {
+            color: #dc2626;
+            background-color: #fef2f2;
+        }
+
+        .expand-icon {
+            font-size: 1.125rem;
+            transition: transform 150ms;
+        }
+
+        .expand-icon.rotated {
+            transform: rotate(180deg);
+        }
+
+        /* クエストリスト */
+        .quests-section {
+            display: none;
+            border-top: 1px solid #f3f4f6;
+            padding: 0.75rem 1rem;
+            background-color: #f9fafb;
+        }
+
+        @media (min-width: 640px) {
+            .quests-section {
+                padding: 1rem;
+            }
+        }
+
+        .quests-section.active {
+            display: block;
+        }
+
+        .quests-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .quest-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem;
+            background-color: white;
+            border-radius: 0.375rem;
+            transition: background-color 150ms;
+        }
+
+        .quest-item:hover {
+            background-color: #f3f4f6;
+        }
+
+        .quest-checkbox {
+            width: 1.25rem;
+            height: 1.25rem;
+            accent-color: #4f46e5;
+            cursor: pointer;
+        }
+
+        .quest-name {
+            flex: 1;
+            font-size: 0.875rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        @media (min-width: 640px) {
+            .quest-name {
+                font-size: 1rem;
+            }
+        }
+
+        .quest-name.completed {
+            color: #9ca3af;
+            text-decoration: line-through;
+        }
+
+        .delete-quest-btn {
+            padding: 0.25rem;
+            background: none;
+            border: none;
+            color: #d1d5db;
+            cursor: pointer;
+            transition: color 150ms;
+        }
+
+        .delete-quest-btn:hover {
+            color: #ef4444;
+        }
+
+        /* クエスト追加フォーム */
+        .add-quest-form {
+            display: flex;
+            gap: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .add-quest-form input {
+            flex: 1;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            outline: none;
+        }
+
+        .add-quest-form input:focus {
+            box-shadow: 0 0 0 2px #4f46e5;
+        }
+
+        .add-quest-btn {
+            padding: 0.5rem 0.75rem;
+            background-color: #4f46e5;
+            color: white;
+            border: none;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: background-color 150ms;
+            font-weight: 500;
+            font-size: 0.875rem;
+        }
+
+        .add-quest-btn:hover {
+            background-color: #4338ca;
+        }
+
+        /* フッター */
+        .footer {
+            text-align: center;
+            font-size: 0.75rem;
+            color: #6b7280;
+            padding-bottom: 1rem;
+            margin-top: 2rem;
+            display: none;
+        }
+
+        .footer.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- ヘッダー -->
+        <div class="header">
+            <h1>デイリークエスト管理</h1>
+            <div class="progress-info">
+                <div>
+                    進捗: <span class="progress-count" id="completedCount">0</span>/<span class="progress-count" id="totalCount">0</span>
+                </div>
+                <button class="reset-btn" id="resetBtn" style="display: none;">🔄 リセット</button>
+            </div>
+            <div class="progress-bar" id="progressBar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        </div>
+
+        <!-- ゲーム追加フォーム -->
+        <div class="add-game-form">
+            <input type="text" id="newGameInput" placeholder="ゲーム名を入力">
+            <button class="add-game-btn" id="addGameBtn">➕ <span class="btn-text">追加</span></button>
+        </div>
+
+        <!-- ゲームリスト -->
+        <div class="games-list" id="gamesList">
+            <div class="empty-message">ゲームを追加してみましょう</div>
+        </div>
+
+        <!-- フッター -->
+        <div class="footer" id="footer">💾 データは自動保存されます</div>
+    </div>
+
+    <script>
+        // データ管理
+        let games = [];
+
+        // DOM 要素
+        const newGameInput = document.getElementById('newGameInput');
+        const addGameBtn = document.getElementById('addGameBtn');
+        const gamesList = document.getElementById('gamesList');
+        const completedCountEl = document.getElementById('completedCount');
+        const totalCountEl = document.getElementById('totalCount');
+        const progressBar = document.getElementById('progressBar');
+        const progressFill = document.getElementById('progressFill');
+        const resetBtn = document.getElementById('resetBtn');
+        const footer = document.getElementById('footer');
+
+        // localStorage から初期化
+        function loadGames() {
+            const saved = localStorage.getItem('dailyQuests');
+            if (saved) {
+                try {
+                    games = JSON.parse(saved);
+                } catch (e) {
+                    console.error('Failed to load data:', e);
+                }
+            }
+            render();
+        }
+
+        // localStorage に保存
+        function saveGames() {
+            localStorage.setItem('dailyQuests', JSON.stringify(games));
+        }
+
+        // 進捗を計算
+        function getStats() {
+            const total = games.reduce((sum, game) => sum + game.quests.length, 0);
+            const completed = games.reduce(
+                (sum, game) => sum + game.quests.filter(q => q.completed).length,
+                0
+            );
+            return { total, completed };
+        }
+
+        // 進捗表示を更新
+        function updateProgress() {
+            const { total, completed } = getStats();
+            completedCountEl.textContent = completed;
+            totalCountEl.textContent = total;
+
+            if (total > 0) {
+                const percentage = (completed / total) * 100;
+                progressFill.style.width = percentage + '%';
+                progressBar.classList.add('active');
+                resetBtn.style.display = 'flex';
+                footer.classList.add('active');
+            } else {
+                progressBar.classList.remove('active');
+                resetBtn.style.display = 'none';
+                footer.classList.remove('active');
+            }
+        }
+
+        // ゲームを追加
+        function addGame() {
+            const name = newGameInput.value.trim();
+            if (name) {
+                games.push({
+                    id: Date.now(),
+                    name: name,
+                    quests: [],
+                    addedDate: new Date().toDateString()
+                });
+                newGameInput.value = '';
+                saveGames();
+                render();
+            }
+        }
+
+        // ゲームを削除
+        function deleteGame(gameId) {
+            games = games.filter(game => game.id !== gameId);
+            saveGames();
+            render();
+        }
+
+        // クエストを追加
+        function addQuest(gameId, questName) {
+            const game = games.find(g => g.id === gameId);
+            if (game && questName.trim()) {
+                game.quests.push({
+                    id: Date.now(),
+                    name: questName,
+                    completed: false
+                });
+                saveGames();
+                render();
+            }
+        }
+
+        // クエストを削除
+        function deleteQuest(gameId, questId) {
+            const game = games.find(g => g.id === gameId);
+            if (game) {
+                game.quests = game.quests.filter(q => q.id !== questId);
+                saveGames();
+                render();
+            }
+        }
+
+        // クエスト完了状態を切り替え
+        function toggleQuestComplete(gameId, questId) {
+            const game = games.find(g => g.id === gameId);
+            if (game) {
+                const quest = game.quests.find(q => q.id === questId);
+                if (quest) {
+                    quest.completed = !quest.completed;
+                    saveGames();
+                    render();
+                }
+            }
+        }
+
+        // すべてのクエストをリセット
+        function resetAllQuests() {
+            if (window.confirm('本当にすべてのクエストをリセットしますか？')) {
+                games.forEach(game => {
+                    game.quests.forEach(quest => {
+                        quest.completed = false;
+                    });
+                });
+                saveGames();
+                render();
+            }
+        }
+
+        // 画面を描画
+        function render() {
+            updateProgress();
+
+            if (games.length === 0) {
+                gamesList.innerHTML = '<div class="empty-message">ゲームを追加してみましょう</div>';
+                return;
+            }
+
+            gamesList.innerHTML = games.map(game => {
+                const completedCount = game.quests.filter(q => q.completed).length;
+                const isExpanded = game.expanded || false;
+
+                return `
+                    <div class="game-card">
+                        <button class="game-header" onclick="toggleGameExpanded(${game.id})">
+                            <div class="game-info">
+                                <div class="game-name">${escapeHtml(game.name)}</div>
+                                <div class="game-progress">${completedCount}/${game.quests.length} 完了</div>
+                            </div>
+                            <div class="game-actions">
+                                <button class="delete-game-btn" onclick="event.stopPropagation(); deleteGame(${game.id})">🗑️</button>
+                                <span class="expand-icon ${isExpanded ? 'rotated' : ''}">▼</span>
+                            </div>
+                        </button>
+                        <div class="quests-section ${isExpanded ? 'active' : ''}">
+                            <div class="quests-list">
+                                ${game.quests.map(quest => `
+                                    <div class="quest-item">
+                                        <input type="checkbox" class="quest-checkbox" ${quest.completed ? 'checked' : ''} onchange="toggleQuestComplete(${game.id}, ${quest.id})">
+                                        <span class="quest-name ${quest.completed ? 'completed' : ''}">${escapeHtml(quest.name)}</span>
+                                        <button class="delete-quest-btn" onclick="deleteQuest(${game.id}, ${quest.id})">🗑️</button>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <div class="add-quest-form">
+                                <input type="text" placeholder="クエスト名を入力" id="quest-input-${game.id}" onkeypress="handleQuestKeypress(event, ${game.id})">
+                                <button class="add-quest-btn" onclick="handleAddQuest(${game.id})">➕</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ゲームの展開状態を切り替え
+        function toggleGameExpanded(gameId) {
+            const game = games.find(g => g.id === gameId);
+            if (game) {
+                game.expanded = !game.expanded;
+                render();
+            }
+        }
+
+        // クエスト追加時の Enter キー処理
+        function handleQuestKeypress(e, gameId) {
+            if (e.key === 'Enter') {
+                handleAddQuest(gameId);
+            }
+        }
+
+        // クエスト追加の処理
+        function handleAddQuest(gameId) {
+            const input = document.getElementById(`quest-input-${gameId}`);
+            const questName = input.value;
+            if (questName.trim()) {
+                addQuest(gameId, questName);
+                input.value = '';
+            }
+        }
+
+        // HTML エスケープ
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // イベントリスナー
+        addGameBtn.addEventListener('click', addGame);
+        newGameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addGame();
+        });
+        resetBtn.addEventListener('click', resetAllQuests);
+
+        // 初期化
+        loadGames();
+    </script>
+</body>
+</html>
