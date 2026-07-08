@@ -120,7 +120,6 @@
             border-radius: 0.5rem;
             font-size: 0.875rem;
             outline: none;
-            transition: ring 150ms;
         }
 
         @media (min-width: 640px) {
@@ -430,9 +429,9 @@
         <div class="footer" id="footer">💾 データはFirebaseに自動保存されます（PC・スマホで同期）</div>
     </div>
 
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js"></script>
+    <!-- Firebase SDK (Compat Version) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
     <script>
         // Firebase 設定
@@ -467,7 +466,7 @@
 
         // Firebase からゲームを読み込み（リアルタイム監視）
         function loadGamesFromFirebase() {
-            const gamesRef = firebase.database().ref('games');
+            const gamesRef = database.ref('games');
             
             gamesRef.on('value', (snapshot) => {
                 const data = snapshot.val();
@@ -527,8 +526,8 @@
         function addGame() {
             const name = newGameInput.value.trim();
             if (name && isInitialized) {
-                const newGameId = firebase.database().ref('games').push().key;
-                firebase.database().ref('games/' + newGameId).set({
+                const newGameId = database.ref('games').push().key;
+                database.ref('games/' + newGameId).set({
                     name: name,
                     quests: {},
                     addedDate: new Date().toISOString()
@@ -540,15 +539,15 @@
         // ゲームを削除
         function deleteGame(gameId) {
             if (isInitialized) {
-                firebase.database().ref('games/' + gameId).remove();
+                database.ref('games/' + gameId).remove();
             }
         }
 
         // クエストを追加
         function addQuest(gameId, questName) {
             if (questName.trim() && isInitialized) {
-                const newQuestId = firebase.database().ref('games/' + gameId + '/quests').push().key;
-                firebase.database().ref('games/' + gameId + '/quests/' + newQuestId).set({
+                const newQuestId = database.ref('games/' + gameId + '/quests').push().key;
+                database.ref('games/' + gameId + '/quests/' + newQuestId).set({
                     name: questName,
                     completed: false
                 });
@@ -558,7 +557,7 @@
         // クエストを削除
         function deleteQuest(gameId, questId) {
             if (isInitialized) {
-                firebase.database().ref('games/' + gameId + '/quests/' + questId).remove();
+                database.ref('games/' + gameId + '/quests/' + questId).remove();
             }
         }
 
@@ -567,7 +566,7 @@
             const game = games.find(g => g.id === gameId);
             if (game && game.quests && game.quests[questId]) {
                 const newState = !game.quests[questId].completed;
-                firebase.database().ref('games/' + gameId + '/quests/' + questId + '/completed').set(newState);
+                database.ref('games/' + gameId + '/quests/' + questId + '/completed').set(newState);
             }
         }
 
@@ -577,7 +576,7 @@
                 games.forEach(game => {
                     if (game.quests) {
                         Object.keys(game.quests).forEach(questId => {
-                            firebase.database().ref('games/' + game.id + '/quests/' + questId + '/completed').set(false);
+                            database.ref('games/' + game.id + '/quests/' + questId + '/completed').set(false);
                         });
                     }
                 });
