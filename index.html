@@ -96,6 +96,12 @@
             transition: width 300ms;
         }
 
+        .sync-status {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-top: 0.5rem;
+        }
+
         /* ゲーム追加フォーム */
         .add-game-form {
             background-color: white;
@@ -406,6 +412,7 @@
             <div class="progress-bar" id="progressBar">
                 <div class="progress-fill" id="progressFill"></div>
             </div>
+            <div class="sync-status" id="syncStatus">データを同期中...</div>
         </div>
 
         <!-- ゲーム追加フォーム -->
@@ -420,12 +427,28 @@
         </div>
 
         <!-- フッター -->
-        <div class="footer" id="footer">💾 データは自動保存されます</div>
+        <div class="footer" id="footer">💾 データはFirebaseに自動保存されます（PC・スマホで同期）</div>
     </div>
 
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js"></script>
+
     <script>
-        // データ管理
-        let games = [];
+        // Firebase 設定
+        const firebaseConfig = {
+            apiKey: "AIzaSyChuMp4TJT_Oo8GkZIOzk2I4RihdKvCpjM",
+            authDomain: "daily-quest-app-93e62.firebaseapp.com",
+            databaseURL: "https://daily-quest-app-93e62-default-rtdb.firebaseio.com",
+            projectId: "daily-quest-app-93e62",
+            storageBucket: "daily-quest-app-93e62.firebasestorage.app",
+            messagingSenderId: "290705395482",
+            appId: "1:290705395482:web:67b1a69af896b79f29a6a3"
+        };
+
+        // Firebase 初期化
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
 
         // DOM 要素
         const newGameInput = document.getElementById('newGameInput');
@@ -437,30 +460,45 @@
         const progressFill = document.getElementById('progressFill');
         const resetBtn = document.getElementById('resetBtn');
         const footer = document.getElementById('footer');
+        const syncStatus = document.getElementById('syncStatus');
 
-        // localStorage から初期化
-        function loadGames() {
-            const saved = localStorage.getItem('dailyQuests');
-            if (saved) {
-                try {
-                    games = JSON.parse(saved);
-                } catch (e) {
-                    console.error('Failed to load data:', e);
+        let games = [];
+        let isInitialized = false;
+
+        // Firebase からゲームを読み込み（リアルタイム監視）
+        function loadGamesFromFirebase() {
+            const gamesRef = firebase.database().ref('games');
+            
+            gamesRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    games = Object.keys(data).map(key => ({
+                        id: key,
+                        ...data[key]
+                    }));
+                } else {
+                    games = [];
                 }
-            }
-            render();
-        }
-
-        // localStorage に保存
-        function saveGames() {
-            localStorage.setItem('dailyQuests', JSON.stringify(games));
+                isInitialized = true;
+                syncStatus.textContent = '✅ データは同期済みです';
+                setTimeout(() => {
+                    syncStatus.textContent = '';
+                }, 3000);
+                render();
+            }, (error) => {
+                console.error('データ読み込みエラー:', error);
+                syncStatus.textContent = '⚠️ エラー: ' + error.message;
+            });
         }
 
         // 進捗を計算
         function getStats() {
-            const total = games.reduce((sum, game) => sum + game.quests.length, 0);
+            const total = games.reduce((sum, game) => sum + (game.quests ? Object.keys(game.quests).length : 0), 0);
             const completed = games.reduce(
-                (sum, game) => sum + game.quests.filter(q => q.completed).length,
+                (sum, game) => {
+                    if (!game.quests) return sum;
+                    return sum + Object.values(game.quests).filter(q => q.completed).length;
+                },
                 0
             );
             return { total, completed };
@@ -488,60 +526,48 @@
         // ゲームを追加
         function addGame() {
             const name = newGameInput.value.trim();
-            if (name) {
-                games.push({
-                    id: Date.now(),
+            if (name && isInitialized) {
+                const newGameId = firebase.database().ref('games').push().key;
+                firebase.database().ref('games/' + newGameId).set({
                     name: name,
-                    quests: [],
-                    addedDate: new Date().toDateString()
+                    quests: {},
+                    addedDate: new Date().toISOString()
                 });
                 newGameInput.value = '';
-                saveGames();
-                render();
             }
         }
 
         // ゲームを削除
         function deleteGame(gameId) {
-            games = games.filter(game => game.id !== gameId);
-            saveGames();
-            render();
+            if (isInitialized) {
+                firebase.database().ref('games/' + gameId).remove();
+            }
         }
 
         // クエストを追加
         function addQuest(gameId, questName) {
-            const game = games.find(g => g.id === gameId);
-            if (game && questName.trim()) {
-                game.quests.push({
-                    id: Date.now(),
+            if (questName.trim() && isInitialized) {
+                const newQuestId = firebase.database().ref('games/' + gameId + '/quests').push().key;
+                firebase.database().ref('games/' + gameId + '/quests/' + newQuestId).set({
                     name: questName,
                     completed: false
                 });
-                saveGames();
-                render();
             }
         }
 
         // クエストを削除
         function deleteQuest(gameId, questId) {
-            const game = games.find(g => g.id === gameId);
-            if (game) {
-                game.quests = game.quests.filter(q => q.id !== questId);
-                saveGames();
-                render();
+            if (isInitialized) {
+                firebase.database().ref('games/' + gameId + '/quests/' + questId).remove();
             }
         }
 
         // クエスト完了状態を切り替え
         function toggleQuestComplete(gameId, questId) {
             const game = games.find(g => g.id === gameId);
-            if (game) {
-                const quest = game.quests.find(q => q.id === questId);
-                if (quest) {
-                    quest.completed = !quest.completed;
-                    saveGames();
-                    render();
-                }
+            if (game && game.quests && game.quests[questId]) {
+                const newState = !game.quests[questId].completed;
+                firebase.database().ref('games/' + gameId + '/quests/' + questId + '/completed').set(newState);
             }
         }
 
@@ -549,12 +575,12 @@
         function resetAllQuests() {
             if (window.confirm('本当にすべてのクエストをリセットしますか？')) {
                 games.forEach(game => {
-                    game.quests.forEach(quest => {
-                        quest.completed = false;
-                    });
+                    if (game.quests) {
+                        Object.keys(game.quests).forEach(questId => {
+                            firebase.database().ref('games/' + game.id + '/quests/' + questId + '/completed').set(false);
+                        });
+                    }
                 });
-                saveGames();
-                render();
             }
         }
 
@@ -568,34 +594,39 @@
             }
 
             gamesList.innerHTML = games.map(game => {
-                const completedCount = game.quests.filter(q => q.completed).length;
+                const quests = game.quests || {};
+                const questIds = Object.keys(quests);
+                const completedCount = questIds.filter(id => quests[id].completed).length;
                 const isExpanded = game.expanded || false;
 
                 return `
                     <div class="game-card">
-                        <button class="game-header" onclick="toggleGameExpanded(${game.id})">
+                        <button class="game-header" onclick="toggleGameExpanded('${game.id}')">
                             <div class="game-info">
                                 <div class="game-name">${escapeHtml(game.name)}</div>
-                                <div class="game-progress">${completedCount}/${game.quests.length} 完了</div>
+                                <div class="game-progress">${completedCount}/${questIds.length} 完了</div>
                             </div>
                             <div class="game-actions">
-                                <button class="delete-game-btn" onclick="event.stopPropagation(); deleteGame(${game.id})">🗑️</button>
+                                <button class="delete-game-btn" onclick="event.stopPropagation(); deleteGame('${game.id}')">🗑️</button>
                                 <span class="expand-icon ${isExpanded ? 'rotated' : ''}">▼</span>
                             </div>
                         </button>
                         <div class="quests-section ${isExpanded ? 'active' : ''}">
                             <div class="quests-list">
-                                ${game.quests.map(quest => `
-                                    <div class="quest-item">
-                                        <input type="checkbox" class="quest-checkbox" ${quest.completed ? 'checked' : ''} onchange="toggleQuestComplete(${game.id}, ${quest.id})">
-                                        <span class="quest-name ${quest.completed ? 'completed' : ''}">${escapeHtml(quest.name)}</span>
-                                        <button class="delete-quest-btn" onclick="deleteQuest(${game.id}, ${quest.id})">🗑️</button>
-                                    </div>
-                                `).join('')}
+                                ${questIds.map(questId => {
+                                    const quest = quests[questId];
+                                    return `
+                                        <div class="quest-item">
+                                            <input type="checkbox" class="quest-checkbox" ${quest.completed ? 'checked' : ''} onchange="toggleQuestComplete('${game.id}', '${questId}')">
+                                            <span class="quest-name ${quest.completed ? 'completed' : ''}">${escapeHtml(quest.name)}</span>
+                                            <button class="delete-quest-btn" onclick="deleteQuest('${game.id}', '${questId}')">🗑️</button>
+                                        </div>
+                                    `;
+                                }).join('')}
                             </div>
                             <div class="add-quest-form">
-                                <input type="text" placeholder="クエスト名を入力" id="quest-input-${game.id}" onkeypress="handleQuestKeypress(event, ${game.id})">
-                                <button class="add-quest-btn" onclick="handleAddQuest(${game.id})">➕</button>
+                                <input type="text" placeholder="クエスト名を入力" id="quest-input-${game.id}" onkeypress="handleQuestKeypress(event, '${game.id}')">
+                                <button class="add-quest-btn" onclick="handleAddQuest('${game.id}')">➕</button>
                             </div>
                         </div>
                     </div>
@@ -644,7 +675,7 @@
         resetBtn.addEventListener('click', resetAllQuests);
 
         // 初期化
-        loadGames();
+        loadGamesFromFirebase();
     </script>
 </body>
 </html>
