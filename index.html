@@ -648,6 +648,10 @@
     let sortMode = 'manual'; // 'manual' or 'alpha'
     const DAYS = ['日','月','火','水','木','金','土'];
 
+    // 開閉状態を記憶
+    const openGames = new Set();
+    const openSections = new Set();
+
     // ===== データ移行（古いデータをデイリーとして引き継ぐ） =====
     function migrateOldData(games) {
         games.forEach(game => {
@@ -816,6 +820,7 @@
         const isOpen = body.classList.toggle('open');
         header.classList.toggle('expanded', isOpen);
         btn.textContent = isOpen ? '▲ 閉じる' : '▼ 開く';
+        if (isOpen) { openGames.add(gameId); } else { openGames.delete(gameId); }
     }
 
     // ===== セクション開閉 =====
@@ -823,8 +828,10 @@
         const content = document.getElementById(`section-${gameId}-${type}`);
         const chevron = document.getElementById(`chevron-${gameId}-${type}`);
         if (!content) return;
-        content.classList.toggle('open');
+        const isOpenSec = content.classList.toggle('open');
         chevron.classList.toggle('open');
+        const secKey = gameId + '-' + type;
+        if (isOpenSec) { openSections.add(secKey); } else { openSections.delete(secKey); }
     }
 
     // ===== 並べ替え =====
@@ -1146,6 +1153,30 @@
                 </div>
             </div>`;
         }).join('');
+        restoreOpenStates();
+    }
+
+    // ===== 開閉状態を復元 =====
+    function restoreOpenStates() {
+        openGames.forEach(function(gameId) {
+            var body = document.getElementById('body-' + gameId);
+            var btn = document.getElementById('expand-btn-' + gameId);
+            var header = document.getElementById('header-' + gameId);
+            if (body) {
+                body.classList.add('open');
+                if (header) header.classList.add('expanded');
+                if (btn) btn.textContent = '▲ 閉じる';
+            }
+        });
+        openSections.forEach(function(key) {
+            var parts = key.lastIndexOf('-');
+            var gameId = key.substring(0, parts);
+            var type = key.substring(parts + 1);
+            var sec = document.getElementById('section-' + gameId + '-' + type);
+            var chev = document.getElementById('chevron-' + gameId + '-' + type);
+            if (sec) sec.classList.add('open');
+            if (chev) chev.classList.add('open');
+        });
     }
 
     function esc(text) {
