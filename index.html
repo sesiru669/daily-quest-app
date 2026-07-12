@@ -5,332 +5,370 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>デイリークエスト管理</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg: #f0f4ff;
+            --card: #ffffff;
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --primary-light: #eef2ff;
+            --danger: #dc2626;
+            --danger-light: #fef2f2;
+            --warning: #d97706;
+            --warning-light: #fffbeb;
+            --success: #059669;
+            --success-light: #ecfdf5;
+            --weekly: #7c3aed;
+            --weekly-light: #f5f3ff;
+            --event: #0891b2;
+            --event-light: #ecfeff;
+            --text: #1f2937;
+            --text-sub: #6b7280;
+            --border: #e5e7eb;
+            --shadow: 0 1px 3px rgba(0,0,0,0.08);
         }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Kaku Gothic ProN', sans-serif;
-            background: linear-gradient(to bottom right, #f0f9ff, #e0e7ff);
+            background: var(--bg);
             min-height: 100vh;
             padding: 1rem;
+            color: var(--text);
         }
 
-        .container {
-            max-width: 42rem;
-            margin: 0 auto;
-        }
+        .container { max-width: 44rem; margin: 0 auto; }
 
         /* ヘッダー */
         .header {
-            background-color: white;
-            border-radius: 0.5rem;
-            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
+            background: var(--card);
+            border-radius: 0.75rem;
+            box-shadow: var(--shadow);
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1rem;
         }
 
-        .header h1 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #1f2937;
-            margin-bottom: 0.5rem;
-        }
-
-        @media (min-width: 640px) {
-            .header h1 {
-                font-size: 1.875rem;
-            }
-        }
-
-        .progress-info {
+        .header-top {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            font-size: 0.875rem;
-            color: #4b5563;
             margin-bottom: 0.75rem;
         }
 
-        .progress-count {
+        .header h1 {
+            font-size: 1.375rem;
             font-weight: 700;
-            color: #4f46e5;
+            color: var(--text);
         }
 
-        .reset-btn {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.25rem 0.75rem;
-            font-size: 0.875rem;
-            background-color: #fef2f2;
-            color: #dc2626;
-            border: none;
+        @media (min-width: 640px) { .header h1 { font-size: 1.75rem; } }
+
+        .header-actions { display: flex; gap: 0.5rem; align-items: center; }
+
+        .csv-btn {
+            padding: 0.375rem 0.75rem;
+            background: var(--success-light);
+            color: var(--success);
+            border: 1px solid #a7f3d0;
             border-radius: 0.375rem;
             cursor: pointer;
-            transition: background-color 150ms;
+            font-size: 0.8rem;
+            font-weight: 500;
+            transition: background 150ms;
         }
 
-        .reset-btn:hover {
-            background-color: #fee2e2;
+        .csv-btn:hover { background: #d1fae5; }
+
+        .reset-all-btn {
+            padding: 0.375rem 0.75rem;
+            background: var(--danger-light);
+            color: var(--danger);
+            border: 1px solid #fecaca;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 500;
+            transition: background 150ms;
         }
 
-        .progress-bar {
-            display: none;
-            background-color: #f3f4f6;
+        .reset-all-btn:hover { background: #fee2e2; }
+
+        .progress-bar-wrap {
+            background: #f3f4f6;
             border-radius: 9999px;
             height: 0.5rem;
             overflow: hidden;
-            margin-top: 0.75rem;
+            margin-bottom: 0.5rem;
         }
 
-        .progress-bar.active {
-            display: block;
-        }
-
-        .progress-fill {
-            background-color: #4f46e5;
+        .progress-bar-fill {
+            background: var(--primary);
             height: 100%;
             transition: width 300ms;
         }
 
-        .sync-status {
-            font-size: 0.75rem;
-            color: #6b7280;
-            margin-top: 0.5rem;
+        .progress-text { font-size: 0.8rem; color: var(--text-sub); }
+        .progress-text span { font-weight: 700; color: var(--primary); }
+        .sync-status { font-size: 0.75rem; color: var(--text-sub); margin-top: 0.25rem; }
+
+        /* ツールバー */
+        .toolbar {
+            background: var(--card);
+            border-radius: 0.75rem;
+            box-shadow: var(--shadow);
+            padding: 0.75rem 1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            align-items: center;
         }
+
+        .toolbar-label { font-size: 0.8rem; color: var(--text-sub); font-weight: 500; }
+
+        .sort-btn {
+            padding: 0.375rem 0.75rem;
+            background: #f3f4f6;
+            color: var(--text-sub);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 500;
+            transition: all 150ms;
+        }
+
+        .sort-btn:hover { background: #e5e7eb; }
+        .sort-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
 
         /* ゲーム追加フォーム */
         .add-game-form {
-            background-color: white;
-            border-radius: 0.5rem;
-            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            background: var(--card);
+            border-radius: 0.75rem;
+            box-shadow: var(--shadow);
             padding: 1rem;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1rem;
             display: flex;
             gap: 0.5rem;
         }
 
         .add-game-form input {
             flex: 1;
-            padding: 0.5rem 1rem;
-            border: 1px solid #d1d5db;
+            padding: 0.5rem 0.875rem;
+            border: 1px solid var(--border);
             border-radius: 0.5rem;
             font-size: 0.875rem;
             outline: none;
+            transition: box-shadow 150ms;
         }
 
-        @media (min-width: 640px) {
-            .add-game-form input {
-                font-size: 1rem;
-            }
-        }
-
-        .add-game-form input:focus {
-            box-shadow: 0 0 0 2px #4f46e5;
-        }
+        .add-game-form input:focus { box-shadow: 0 0 0 2px var(--primary); border-color: var(--primary); }
 
         .add-game-btn {
             padding: 0.5rem 1rem;
-            background-color: #4f46e5;
+            background: var(--primary);
             color: white;
             border: none;
             border-radius: 0.5rem;
             cursor: pointer;
-            transition: background-color 150ms;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
+            font-weight: 600;
+            font-size: 0.875rem;
+            transition: background 150ms;
+            white-space: nowrap;
         }
 
-        .add-game-btn:hover {
-            background-color: #4338ca;
-        }
-
-        .btn-text {
-            display: none;
-        }
-
-        @media (min-width: 640px) {
-            .btn-text {
-                display: inline;
-            }
-        }
+        .add-game-btn:hover { background: var(--primary-dark); }
 
         /* ゲームリスト */
-        .games-list {
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-        }
+        .games-list { display: flex; flex-direction: column; gap: 0.75rem; }
 
         .empty-message {
             text-align: center;
             padding: 3rem 1rem;
-            color: #9ca3af;
+            color: var(--text-sub);
+            background: var(--card);
+            border-radius: 0.75rem;
         }
 
         /* ゲームカード */
         .game-card {
-            background-color: white;
-            border-radius: 0.5rem;
-            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            background: var(--card);
+            border-radius: 0.75rem;
+            box-shadow: var(--shadow);
             overflow: hidden;
         }
 
         .game-header {
-            width: 100%;
-            padding: 0.75rem 1rem;
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            background-color: white;
-            border: none;
-            cursor: pointer;
-            text-align: left;
-            transition: background-color 150ms;
+            padding: 0.875rem 1rem;
+            gap: 0.5rem;
+            border-bottom: 1px solid transparent;
+            transition: background 150ms;
         }
 
-        @media (min-width: 640px) {
-            .game-header {
-                padding: 1rem;
-            }
-        }
+        .game-header:hover { background: #fafafa; }
 
-        .game-header:hover {
-            background-color: #f9fafb;
-        }
+        .game-header.expanded { border-bottom-color: var(--border); }
 
-        .game-info {
-            flex: 1;
-            min-width: 0;
-        }
+        .game-title-area { flex: 1; min-width: 0; cursor: pointer; }
 
         .game-name {
             font-weight: 600;
-            color: #1f2937;
-            font-size: 0.875rem;
+            color: var(--text);
+            font-size: 0.95rem;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
         }
 
-        @media (min-width: 640px) {
-            .game-name {
-                font-size: 1rem;
-            }
-        }
-
-        .game-progress {
-            font-size: 0.75rem;
-            color: #6b7280;
+        .game-meta {
+            display: flex;
+            gap: 0.75rem;
             margin-top: 0.25rem;
+            flex-wrap: wrap;
         }
 
-        @media (min-width: 640px) {
-            .game-progress {
-                font-size: 0.875rem;
-            }
+        .game-meta-item {
+            font-size: 0.72rem;
+            color: var(--text-sub);
+            display: flex;
+            align-items: center;
+            gap: 0.2rem;
         }
 
         .game-actions {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            margin-left: 0.5rem;
+            gap: 0.2rem;
+            flex-shrink: 0;
         }
 
-        .delete-game-btn {
-            padding: 0.375rem;
+        .icon-btn {
+            padding: 0.3rem;
             background: none;
             border: none;
-            color: #9ca3af;
             cursor: pointer;
-            transition: color 150ms, background-color 150ms;
             border-radius: 0.375rem;
+            font-size: 1rem;
+            transition: background 150ms;
+            line-height: 1;
         }
 
-        .delete-game-btn:hover {
-            color: #dc2626;
-            background-color: #fef2f2;
+        .icon-btn:hover { background: #f3f4f6; }
+        .icon-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+        .icon-btn.delete:hover { background: var(--danger-light); }
+
+        .expand-btn {
+            padding: 0.3rem 0.5rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 0.8rem;
+            color: var(--text-sub);
+            border-radius: 0.375rem;
+            transition: all 150ms;
         }
 
-        .expand-icon {
-            font-size: 1.125rem;
-            transition: transform 150ms;
-        }
+        .expand-btn:hover { background: #f3f4f6; }
 
-        .expand-icon.rotated {
-            transform: rotate(180deg);
-        }
+        /* ゲーム本体（展開） */
+        .game-body { display: none; }
+        .game-body.open { display: block; }
 
-        /* クエストリスト */
-        .quests-section {
-            display: none;
-            border-top: 1px solid #f3f4f6;
-            padding: 0.75rem 1rem;
-            background-color: #f9fafb;
-        }
+        /* セクション */
+        .quest-section { border-bottom: 1px solid var(--border); }
+        .quest-section:last-child { border-bottom: none; }
 
-        @media (min-width: 640px) {
-            .quests-section {
-                padding: 1rem;
-            }
-        }
-
-        .quests-section.active {
-            display: block;
-        }
-
-        .quests-list {
+        .section-header {
             display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-            margin-bottom: 0.5rem;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.625rem 1rem;
+            cursor: pointer;
+            transition: background 150ms;
+            user-select: none;
         }
 
+        .section-header:hover { background: #fafafa; }
+
+        .section-title {
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+        }
+
+        .section-title.daily { color: var(--primary); }
+        .section-title.weekly { color: var(--weekly); }
+        .section-title.event { color: var(--event); }
+
+        .section-badge {
+            font-size: 0.7rem;
+            padding: 0.1rem 0.4rem;
+            border-radius: 9999px;
+            font-weight: 500;
+        }
+
+        .section-badge.daily { background: var(--primary-light); color: var(--primary); }
+        .section-badge.weekly { background: var(--weekly-light); color: var(--weekly); }
+        .section-badge.event { background: var(--event-light); color: var(--event); }
+
+        .section-chevron { font-size: 0.75rem; color: var(--text-sub); transition: transform 150ms; }
+        .section-chevron.open { transform: rotate(180deg); }
+
+        .section-content { display: none; padding: 0.5rem 1rem 0.75rem; background: #fafafa; }
+        .section-content.open { display: block; }
+
+        /* クエストアイテム */
         .quest-item {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-            padding: 0.5rem;
-            background-color: white;
-            border-radius: 0.375rem;
-            transition: background-color 150ms;
+            gap: 0.625rem;
+            padding: 0.5rem 0.625rem;
+            background: white;
+            border-radius: 0.5rem;
+            margin-bottom: 0.375rem;
+            border: 1px solid var(--border);
+            transition: background 150ms;
         }
 
-        .quest-item:hover {
-            background-color: #f3f4f6;
-        }
+        .quest-item:hover { background: #f9fafb; }
+
+        .quest-item:last-child { margin-bottom: 0; }
 
         .quest-checkbox {
-            width: 1.25rem;
-            height: 1.25rem;
-            accent-color: #4f46e5;
+            width: 1.125rem;
+            height: 1.125rem;
+            accent-color: var(--primary);
             cursor: pointer;
+            flex-shrink: 0;
         }
 
+        .quest-info { flex: 1; min-width: 0; }
+
         .quest-name {
-            flex: 1;
             font-size: 0.875rem;
+            color: var(--text);
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
         }
 
-        @media (min-width: 640px) {
-            .quest-name {
-                font-size: 1rem;
-            }
-        }
-
         .quest-name.completed {
-            color: #9ca3af;
+            color: var(--text-sub);
             text-decoration: line-through;
         }
+
+        .quest-event-time {
+            font-size: 0.7rem;
+            color: var(--text-sub);
+            margin-top: 0.125rem;
+        }
+
+        .quest-event-time.urgent { color: var(--danger); font-weight: 600; }
+        .quest-event-time.soon { color: var(--warning); font-weight: 500; }
 
         .delete-quest-btn {
             padding: 0.25rem;
@@ -339,342 +377,790 @@
             color: #d1d5db;
             cursor: pointer;
             transition: color 150ms;
+            flex-shrink: 0;
+            font-size: 0.875rem;
         }
 
-        .delete-quest-btn:hover {
-            color: #ef4444;
-        }
+        .delete-quest-btn:hover { color: var(--danger); }
 
         /* クエスト追加フォーム */
         .add-quest-form {
+            margin-top: 0.5rem;
             display: flex;
-            gap: 0.5rem;
-            padding-top: 0.5rem;
-            border-top: 1px solid #e5e7eb;
+            flex-direction: column;
+            gap: 0.375rem;
         }
 
-        .add-quest-form input {
+        .add-quest-row { display: flex; gap: 0.375rem; }
+
+        .add-quest-row input, .add-quest-event-row input {
             flex: 1;
-            padding: 0.5rem 0.75rem;
-            border: 1px solid #d1d5db;
+            padding: 0.4rem 0.625rem;
+            border: 1px solid var(--border);
             border-radius: 0.375rem;
-            font-size: 0.875rem;
+            font-size: 0.8rem;
             outline: none;
         }
 
-        .add-quest-form input:focus {
-            box-shadow: 0 0 0 2px #4f46e5;
+        .add-quest-row input:focus, .add-quest-event-row input:focus {
+            box-shadow: 0 0 0 2px var(--primary);
+            border-color: var(--primary);
         }
 
-        .add-quest-btn {
-            padding: 0.5rem 0.75rem;
-            background-color: #4f46e5;
+        .add-quest-event-row {
+            display: flex;
+            gap: 0.375rem;
+            flex-wrap: wrap;
+        }
+
+        .add-quest-event-row input[type="datetime-local"] {
+            flex: 1;
+            min-width: 140px;
+        }
+
+        .add-quest-btn-sm {
+            padding: 0.4rem 0.625rem;
+            background: var(--primary);
             color: white;
             border: none;
             border-radius: 0.375rem;
             cursor: pointer;
-            transition: background-color 150ms;
-            font-weight: 500;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: background 150ms;
+            white-space: nowrap;
+        }
+
+        .add-quest-btn-sm:hover { background: var(--primary-dark); }
+
+        /* ゲーム設定モーダル */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .modal-overlay.open { display: flex; }
+
+        .modal {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            width: 100%;
+            max-width: 28rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+
+        .modal h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; }
+
+        .modal-field { margin-bottom: 0.875rem; }
+
+        .modal-label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-sub);
+            margin-bottom: 0.375rem;
+        }
+
+        .modal-input {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
             font-size: 0.875rem;
+            outline: none;
         }
 
-        .add-quest-btn:hover {
-            background-color: #4338ca;
+        .modal-input:focus { box-shadow: 0 0 0 2px var(--primary); border-color: var(--primary); }
+
+        .day-selector { display: flex; gap: 0.375rem; flex-wrap: wrap; }
+
+        .day-btn {
+            padding: 0.375rem 0.5rem;
+            border: 1px solid var(--border);
+            border-radius: 0.375rem;
+            background: #f3f4f6;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 500;
+            transition: all 150ms;
         }
 
-        /* フッター */
+        .day-btn.selected { background: var(--weekly); color: white; border-color: var(--weekly); }
+
+        .modal-actions { display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1rem; }
+
+        .modal-cancel {
+            padding: 0.5rem 1rem;
+            background: #f3f4f6;
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .modal-save {
+            padding: 0.5rem 1rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        /* 履歴モーダル */
+        .history-list { max-height: 300px; overflow-y: auto; }
+
+        .history-item {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.8rem;
+        }
+
+        .history-item:last-child { border-bottom: none; }
+
+        .history-date { font-weight: 600; color: var(--primary); }
+
         .footer {
             text-align: center;
             font-size: 0.75rem;
-            color: #6b7280;
-            padding-bottom: 1rem;
-            margin-top: 2rem;
-            display: none;
-        }
-
-        .footer.active {
-            display: block;
+            color: var(--text-sub);
+            padding: 1.5rem 0 0.5rem;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- ヘッダー -->
-        <div class="header">
-            <h1>デイリークエスト管理</h1>
-            <div class="progress-info">
-                <div>
-                    進捗: <span class="progress-count" id="completedCount">0</span>/<span class="progress-count" id="totalCount">0</span>
-                </div>
-                <button class="reset-btn" id="resetBtn" style="display: none;">🔄 リセット</button>
+<div class="container">
+
+    <!-- ヘッダー -->
+    <div class="header">
+        <div class="header-top">
+            <h1>🎮 デイリークエスト管理</h1>
+            <div class="header-actions">
+                <button class="csv-btn" onclick="exportCSV()">📥 CSV出力</button>
+                <button class="reset-all-btn" onclick="resetAllQuests()">🔄 全リセット</button>
             </div>
-            <div class="progress-bar" id="progressBar">
-                <div class="progress-fill" id="progressFill"></div>
-            </div>
-            <div class="sync-status" id="syncStatus">データを同期中...</div>
         </div>
-
-        <!-- ゲーム追加フォーム -->
-        <div class="add-game-form">
-            <input type="text" id="newGameInput" placeholder="ゲーム名を入力">
-            <button class="add-game-btn" id="addGameBtn">➕ <span class="btn-text">追加</span></button>
+        <div class="progress-bar-wrap">
+            <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
         </div>
-
-        <!-- ゲームリスト -->
-        <div class="games-list" id="gamesList">
-            <div class="empty-message">ゲームを追加してみましょう</div>
+        <div class="progress-text">
+            進捗: <span id="completedCount">0</span> / <span id="totalCount">0</span> 完了
         </div>
-
-        <!-- フッター -->
-        <div class="footer" id="footer">💾 データはFirebaseに自動保存されます（PC・スマホで同期）</div>
+        <div class="sync-status" id="syncStatus">データを同期中...</div>
     </div>
 
-    <!-- Firebase SDK (Compat Version) -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <!-- ツールバー -->
+    <div class="toolbar">
+        <span class="toolbar-label">並べ替え：</span>
+        <button class="sort-btn" id="sortAlphaBtn" onclick="sortAlpha()">📝 50音順</button>
+        <button class="sort-btn" id="sortManualBtn" onclick="sortManual()">✋ 手動</button>
+    </div>
 
-    <script>
-        // Firebase 設定
-        const firebaseConfig = {
-            apiKey: "AIzaSyChuMp4TJT_Oo8GkZIOzk2I4RihdKvCpjM",
-            authDomain: "daily-quest-app-93e62.firebaseapp.com",
-            databaseURL: "https://daily-quest-app-93e62-default-rtdb.firebaseio.com",
-            projectId: "daily-quest-app-93e62",
-            storageBucket: "daily-quest-app-93e62.firebasestorage.app",
-            messagingSenderId: "290705395482",
-            appId: "1:290705395482:web:67b1a69af896b79f29a6a3"
-        };
+    <!-- ゲーム追加 -->
+    <div class="add-game-form">
+        <input type="text" id="newGameInput" placeholder="ゲーム名を入力してEnter">
+        <button class="add-game-btn" onclick="addGame()">➕ 追加</button>
+    </div>
 
-        // Firebase 初期化
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
+    <!-- ゲームリスト -->
+    <div class="games-list" id="gamesList">
+        <div class="empty-message">ゲームを追加してみましょう</div>
+    </div>
 
-        // DOM 要素
-        const newGameInput = document.getElementById('newGameInput');
-        const addGameBtn = document.getElementById('addGameBtn');
-        const gamesList = document.getElementById('gamesList');
-        const completedCountEl = document.getElementById('completedCount');
-        const totalCountEl = document.getElementById('totalCount');
-        const progressBar = document.getElementById('progressBar');
-        const progressFill = document.getElementById('progressFill');
-        const resetBtn = document.getElementById('resetBtn');
-        const footer = document.getElementById('footer');
-        const syncStatus = document.getElementById('syncStatus');
+    <div class="footer" id="footer" style="display:none">💾 Firebaseに自動保存中（PC・スマホ同期）</div>
+</div>
 
-        let games = [];
-        let isInitialized = false;
+<!-- ゲーム設定モーダル -->
+<div class="modal-overlay" id="settingsModal">
+    <div class="modal">
+        <h2>⚙️ ゲーム設定</h2>
+        <input type="hidden" id="settingsGameId">
+        <div class="modal-field">
+            <label class="modal-label">ゲーム名</label>
+            <input type="text" class="modal-input" id="settingsGameName">
+        </div>
+        <div class="modal-field">
+            <label class="modal-label">🌅 デイリーリセット時刻</label>
+            <input type="time" class="modal-input" id="settingsDailyReset" value="05:00">
+        </div>
+        <div class="modal-field">
+            <label class="modal-label">📅 ウィークリーリセット曜日</label>
+            <div class="day-selector" id="daySelector">
+                <button class="day-btn" data-day="0">日</button>
+                <button class="day-btn" data-day="1">月</button>
+                <button class="day-btn" data-day="2">火</button>
+                <button class="day-btn" data-day="3">水</button>
+                <button class="day-btn" data-day="4">木</button>
+                <button class="day-btn" data-day="5">金</button>
+                <button class="day-btn" data-day="6">土</button>
+            </div>
+        </div>
+        <div class="modal-actions">
+            <button class="modal-cancel" onclick="closeSettingsModal()">キャンセル</button>
+            <button class="modal-save" onclick="saveSettings()">保存</button>
+        </div>
+    </div>
+</div>
 
-        // Firebase からゲームを読み込み（リアルタイム監視）
-        function loadGamesFromFirebase() {
-            const gamesRef = database.ref('games');
-            
-            gamesRef.on('value', (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    games = Object.keys(data).map(key => ({
-                        id: key,
-                        ...data[key]
-                    }));
-                } else {
-                    games = [];
+<!-- 履歴モーダル -->
+<div class="modal-overlay" id="historyModal">
+    <div class="modal">
+        <h2>📋 完了履歴</h2>
+        <div class="history-list" id="historyList"></div>
+        <div class="modal-actions">
+            <button class="modal-cancel" onclick="closeHistoryModal()">閉じる</button>
+        </div>
+    </div>
+</div>
+
+<!-- Firebase SDK (Compat) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<script>
+    // ===== Firebase 設定 =====
+    const firebaseConfig = {
+        apiKey: "AIzaSyChuMp4TJT_Oo8GkZIOzk2I4RihdKvCpjM",
+        authDomain: "daily-quest-app-93e62.firebaseapp.com",
+        databaseURL: "https://daily-quest-app-93e62-default-rtdb.firebaseio.com",
+        projectId: "daily-quest-app-93e62",
+        storageBucket: "daily-quest-app-93e62.firebasestorage.app",
+        messagingSenderId: "290705395482",
+        appId: "1:290705395482:web:67b1a69af896b79f29a6a3"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // ===== 状態管理 =====
+    let games = [];
+    let isReady = false;
+    let sortMode = 'manual'; // 'manual' or 'alpha'
+    const DAYS = ['日','月','火','水','木','金','土'];
+
+    // ===== データ移行（古いデータをデイリーとして引き継ぐ） =====
+    function migrateOldData(games) {
+        games.forEach(game => {
+            if (!game.quests) return;
+            Object.entries(game.quests).forEach(([qid, q]) => {
+                // typeがない古いクエストはデイリーとして移行
+                if (!q.type) {
+                    db.ref(`games/${game.id}/quests/${qid}/type`).set('daily');
                 }
-                isInitialized = true;
-                syncStatus.textContent = '✅ データは同期済みです';
-                setTimeout(() => {
-                    syncStatus.textContent = '';
-                }, 3000);
-                render();
-            }, (error) => {
-                console.error('データ読み込みエラー:', error);
-                syncStatus.textContent = '⚠️ エラー: ' + error.message;
             });
+            // order がない古いゲームに order を付与
+            if (game.order == null) {
+                db.ref(`games/${game.id}/order`).set(0);
+            }
+            // dailyResetTime がない古いゲームにデフォルト値を付与
+            if (!game.dailyResetTime) {
+                db.ref(`games/${game.id}/dailyResetTime`).set('05:00');
+            }
+        });
+    }
+
+    // ===== 初期化 =====
+    function init() {
+        db.ref('games').on('value', snap => {
+            const data = snap.val() || {};
+            games = Object.keys(data).map(id => ({ id, ...data[id] }));
+            // 古いデータの移行処理
+            migrateOldData(games);
+            games.forEach((g, i) => { if (g.order == null) db.ref(`games/${g.id}/order`).set(i); });
+            isReady = true;
+            document.getElementById('syncStatus').textContent = '✅ 同期済み';
+            setTimeout(() => document.getElementById('syncStatus').textContent = '', 3000);
+            checkAutoReset();
+            render();
+        }, err => {
+            document.getElementById('syncStatus').textContent = '⚠️ ' + err.message;
+        });
+    }
+
+    // ===== 自動リセット判定 =====
+    function checkAutoReset() {
+        const now = new Date();
+        games.forEach(game => {
+            // デイリーリセット
+            const resetTime = game.dailyResetTime || '05:00';
+            const [rh, rm] = resetTime.split(':').map(Number);
+            const lastReset = game.lastDailyReset ? new Date(game.lastDailyReset) : null;
+            const todayReset = new Date(now);
+            todayReset.setHours(rh, rm, 0, 0);
+            const resetDate = now >= todayReset ? todayReset : new Date(todayReset - 86400000);
+
+            if (!lastReset || lastReset < resetDate) {
+                saveHistory(game, 'daily');
+                resetQuests(game.id, 'daily');
+                db.ref(`games/${game.id}/lastDailyReset`).set(now.toISOString());
+            }
+
+            // ウィークリーリセット
+            const resetDay = game.weeklyResetDay != null ? game.weeklyResetDay : null;
+            if (resetDay != null) {
+                const lastWeekly = game.lastWeeklyReset ? new Date(game.lastWeeklyReset) : null;
+                const dayDiff = (now.getDay() - resetDay + 7) % 7;
+                const lastResetDay = new Date(now);
+                lastResetDay.setDate(now.getDate() - dayDiff);
+                lastResetDay.setHours(rh, rm, 0, 0);
+                if (!lastWeekly || lastWeekly < lastResetDay) {
+                    saveHistory(game, 'weekly');
+                    resetQuests(game.id, 'weekly');
+                    db.ref(`games/${game.id}/lastWeeklyReset`).set(now.toISOString());
+                }
+            }
+        });
+    }
+
+    // ===== 履歴保存 =====
+    function saveHistory(game, type) {
+        const quests = game.quests || {};
+        const completed = Object.entries(quests)
+            .filter(([, q]) => q.type === type && q.completed);
+        if (!completed.length) return;
+        const historyRef = db.ref(`history/${game.id}`).push();
+        historyRef.set({
+            date: new Date().toISOString(),
+            type,
+            quests: completed.map(([, q]) => ({ name: q.name, completedAt: q.completedAt || '' }))
+        });
+    }
+
+    // ===== クエストリセット =====
+    function resetQuests(gameId, type) {
+        const game = games.find(g => g.id === gameId);
+        if (!game || !game.quests) return;
+        Object.entries(game.quests).forEach(([qid, q]) => {
+            if (q.type === type) {
+                db.ref(`games/${gameId}/quests/${qid}/completed`).set(false);
+                db.ref(`games/${gameId}/quests/${qid}/completedAt`).remove();
+            }
+        });
+    }
+
+    // ===== ゲーム追加 =====
+    function addGame() {
+        const name = document.getElementById('newGameInput').value.trim();
+        if (!name || !isReady) return;
+        const id = db.ref('games').push().key;
+        db.ref(`games/${id}`).set({
+            name, order: games.length,
+            dailyResetTime: '05:00', weeklyResetDay: null,
+            quests: {}, addedAt: new Date().toISOString()
+        });
+        document.getElementById('newGameInput').value = '';
+    }
+
+    // ===== ゲーム削除 =====
+    function deleteGame(id) {
+        if (!confirm('このゲームを削除しますか？')) return;
+        db.ref(`games/${id}`).remove();
+    }
+
+    // ===== クエスト追加 =====
+    function addQuest(gameId, type) {
+        const inputEl = document.getElementById(`quest-input-${gameId}-${type}`);
+        const name = inputEl?.value.trim();
+        if (!name) return;
+
+        const questData = { name, type, completed: false, addedAt: new Date().toISOString() };
+
+        if (type === 'event') {
+            const startEl = document.getElementById(`quest-start-${gameId}`);
+            const endEl = document.getElementById(`quest-end-${gameId}`);
+            if (startEl?.value) questData.startAt = startEl.value;
+            if (endEl?.value) questData.endAt = endEl.value;
+            if (startEl) startEl.value = '';
+            if (endEl) endEl.value = '';
         }
 
-        // 進捗を計算
-        function getStats() {
-            const total = games.reduce((sum, game) => sum + (game.quests ? Object.keys(game.quests).length : 0), 0);
-            const completed = games.reduce(
-                (sum, game) => {
-                    if (!game.quests) return sum;
-                    return sum + Object.values(game.quests).filter(q => q.completed).length;
-                },
-                0
-            );
-            return { total, completed };
+        const qid = db.ref(`games/${gameId}/quests`).push().key;
+        db.ref(`games/${gameId}/quests/${qid}`).set(questData);
+        inputEl.value = '';
+    }
+
+    // ===== クエスト削除 =====
+    function deleteQuest(gameId, questId) {
+        db.ref(`games/${gameId}/quests/${questId}`).remove();
+    }
+
+    // ===== クエスト完了トグル =====
+    function toggleQuest(gameId, questId) {
+        const game = games.find(g => g.id === gameId);
+        if (!game?.quests?.[questId]) return;
+        const current = game.quests[questId].completed;
+        db.ref(`games/${gameId}/quests/${questId}/completed`).set(!current);
+        if (!current) {
+            db.ref(`games/${gameId}/quests/${questId}/completedAt`).set(new Date().toISOString());
+        } else {
+            db.ref(`games/${gameId}/quests/${questId}/completedAt`).remove();
         }
+    }
 
-        // 進捗表示を更新
-        function updateProgress() {
-            const { total, completed } = getStats();
-            completedCountEl.textContent = completed;
-            totalCountEl.textContent = total;
+    // ===== ゲームカード開閉 =====
+    function toggleGameBody(gameId) {
+        const body = document.getElementById(`body-${gameId}`);
+        const btn = document.getElementById(`expand-btn-${gameId}`);
+        const header = document.getElementById(`header-${gameId}`);
+        if (!body) return;
+        const isOpen = body.classList.toggle('open');
+        header.classList.toggle('expanded', isOpen);
+        btn.textContent = isOpen ? '▲ 閉じる' : '▼ 開く';
+    }
 
-            if (total > 0) {
-                const percentage = (completed / total) * 100;
-                progressFill.style.width = percentage + '%';
-                progressBar.classList.add('active');
-                resetBtn.style.display = 'flex';
-                footer.classList.add('active');
+    // ===== セクション開閉 =====
+    function toggleSection(gameId, type) {
+        const content = document.getElementById(`section-${gameId}-${type}`);
+        const chevron = document.getElementById(`chevron-${gameId}-${type}`);
+        if (!content) return;
+        content.classList.toggle('open');
+        chevron.classList.toggle('open');
+    }
+
+    // ===== 並べ替え =====
+    function sortAlpha() {
+        sortMode = 'alpha';
+        games.sort((a, b) => a.name.localeCompare(b.name, 'ja'));
+        games.forEach((g, i) => { g.order = i; db.ref(`games/${g.id}/order`).set(i); });
+        document.getElementById('sortAlphaBtn').classList.add('active');
+        document.getElementById('sortManualBtn').classList.remove('active');
+        render();
+    }
+
+    function sortManual() {
+        sortMode = 'manual';
+        document.getElementById('sortManualBtn').classList.add('active');
+        document.getElementById('sortAlphaBtn').classList.remove('active');
+        render();
+    }
+
+    function moveUp(gameId) {
+        const idx = games.findIndex(g => g.id === gameId);
+        if (idx <= 0) return;
+        [games[idx].order, games[idx-1].order] = [games[idx-1].order, games[idx].order];
+        [games[idx], games[idx-1]] = [games[idx-1], games[idx]];
+        db.ref(`games/${games[idx].id}/order`).set(games[idx].order);
+        db.ref(`games/${games[idx-1].id}/order`).set(games[idx-1].order);
+        sortMode = 'manual';
+        render();
+    }
+
+    function moveDown(gameId) {
+        const idx = games.findIndex(g => g.id === gameId);
+        if (idx >= games.length - 1) return;
+        [games[idx].order, games[idx+1].order] = [games[idx+1].order, games[idx].order];
+        [games[idx], games[idx+1]] = [games[idx+1], games[idx]];
+        db.ref(`games/${games[idx].id}/order`).set(games[idx].order);
+        db.ref(`games/${games[idx+1].id}/order`).set(games[idx+1].order);
+        sortMode = 'manual';
+        render();
+    }
+
+    // ===== 設定モーダル =====
+    function openSettingsModal(gameId) {
+        const game = games.find(g => g.id === gameId);
+        if (!game) return;
+        document.getElementById('settingsGameId').value = gameId;
+        document.getElementById('settingsGameName').value = game.name;
+        document.getElementById('settingsDailyReset').value = game.dailyResetTime || '05:00';
+        document.querySelectorAll('.day-btn').forEach(btn => {
+            btn.classList.toggle('selected', Number(btn.dataset.day) === game.weeklyResetDay);
+        });
+        document.getElementById('settingsModal').classList.add('open');
+    }
+
+    function closeSettingsModal() {
+        document.getElementById('settingsModal').classList.remove('open');
+    }
+
+    function saveSettings() {
+        const id = document.getElementById('settingsGameId').value;
+        const name = document.getElementById('settingsGameName').value.trim();
+        const resetTime = document.getElementById('settingsDailyReset').value;
+        const selectedDay = document.querySelector('.day-btn.selected');
+        const weeklyDay = selectedDay ? Number(selectedDay.dataset.day) : null;
+        if (!name) return;
+        db.ref(`games/${id}`).update({ name, dailyResetTime: resetTime, weeklyResetDay: weeklyDay });
+        closeSettingsModal();
+    }
+
+    document.querySelectorAll('.day-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const wasSelected = btn.classList.contains('selected');
+            document.querySelectorAll('.day-btn').forEach(b => b.classList.remove('selected'));
+            if (!wasSelected) btn.classList.add('selected');
+        });
+    });
+
+    // ===== 全リセット =====
+    function resetAllQuests() {
+        if (!confirm('すべてのデイリー・ウィークリークエストをリセットしますか？')) return;
+        games.forEach(game => {
+            saveHistory(game, 'daily');
+            saveHistory(game, 'weekly');
+            resetQuests(game.id, 'daily');
+            resetQuests(game.id, 'weekly');
+            db.ref(`games/${game.id}/lastDailyReset`).set(new Date().toISOString());
+            db.ref(`games/${game.id}/lastWeeklyReset`).set(new Date().toISOString());
+        });
+    }
+
+    // ===== 履歴表示 =====
+    function showHistory(gameId) {
+        db.ref(`history/${gameId}`).once('value', snap => {
+            const data = snap.val() || {};
+            const items = Object.values(data).sort((a, b) => b.date.localeCompare(a.date));
+            const list = document.getElementById('historyList');
+            if (!items.length) {
+                list.innerHTML = '<div class="history-item">履歴がありません</div>';
             } else {
-                progressBar.classList.remove('active');
-                resetBtn.style.display = 'none';
-                footer.classList.remove('active');
+                list.innerHTML = items.map(item => `
+                    <div class="history-item">
+                        <div class="history-date">${new Date(item.date).toLocaleString('ja-JP')} (${item.type === 'daily' ? 'デイリー' : 'ウィークリー'})</div>
+                        ${(item.quests || []).map(q => `<div>✅ ${q.name}</div>`).join('')}
+                    </div>
+                `).join('');
             }
+            document.getElementById('historyModal').classList.add('open');
+        });
+    }
+
+    function closeHistoryModal() {
+        document.getElementById('historyModal').classList.remove('open');
+    }
+
+    // ===== CSV出力 =====
+    function exportCSV() {
+        const rows = [['ゲーム名','種別','クエスト名','完了状態','完了日時','リセット時刻']];
+        games.forEach(game => {
+            const quests = game.quests || {};
+            Object.values(quests).forEach(q => {
+                const typeLabel = q.type === 'daily' ? 'デイリー' : q.type === 'weekly' ? 'ウィークリー' : 'イベント';
+                const resetInfo = q.type === 'daily' ? (game.dailyResetTime || '-') :
+                    q.type === 'weekly' ? (game.weeklyResetDay != null ? DAYS[game.weeklyResetDay] + '曜日' : '-') : '-';
+                rows.push([
+                    game.name, typeLabel, q.name,
+                    q.completed ? '完了' : '未完了',
+                    q.completedAt ? new Date(q.completedAt).toLocaleString('ja-JP') : '-',
+                    resetInfo
+                ]);
+            });
+        });
+        const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+        const bom = '\uFEFF';
+        const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `quest_${new Date().toISOString().slice(0,10)}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    // ===== 進捗計算 =====
+    function getStats() {
+        let total = 0, completed = 0;
+        games.forEach(g => {
+            Object.values(g.quests || {}).forEach(q => {
+                total++;
+                if (q.completed) completed++;
+            });
+        });
+        return { total, completed };
+    }
+
+    // ===== イベント残り時間 =====
+    function getEventTimeLabel(endAt) {
+        if (!endAt) return { label: '', cls: '' };
+        const now = new Date();
+        const end = new Date(endAt);
+        const diff = end - now;
+        if (diff < 0) return { label: '終了済み', cls: 'urgent' };
+        const h = Math.floor(diff / 3600000);
+        const d = Math.floor(h / 24);
+        if (h < 24) return { label: `残り${h}時間`, cls: 'urgent' };
+        if (d < 3) return { label: `残り${d}日`, cls: 'soon' };
+        return { label: `残り${d}日`, cls: '' };
+    }
+
+    // ===== 描画 =====
+    function render() {
+        const sorted = [...games].sort((a, b) =>
+            sortMode === 'alpha'
+                ? a.name.localeCompare(b.name, 'ja')
+                : (a.order || 0) - (b.order || 0)
+        );
+
+        const { total, completed } = getStats();
+        document.getElementById('completedCount').textContent = completed;
+        document.getElementById('totalCount').textContent = total;
+        document.getElementById('progressFill').style.width = total ? `${(completed/total)*100}%` : '0%';
+        document.getElementById('footer').style.display = games.length ? 'block' : 'none';
+
+        if (!sorted.length) {
+            document.getElementById('gamesList').innerHTML = '<div class="empty-message">ゲームを追加してみましょう</div>';
+            return;
         }
 
-        // ゲームを追加
-        function addGame() {
-            const name = newGameInput.value.trim();
-            if (name && isInitialized) {
-                const newGameId = database.ref('games').push().key;
-                database.ref('games/' + newGameId).set({
-                    name: name,
-                    quests: {},
-                    addedDate: new Date().toISOString()
+        document.getElementById('gamesList').innerHTML = sorted.map((game, idx) => {
+            const quests = game.quests || {};
+            const daily = Object.entries(quests).filter(([,q]) => q.type === 'daily');
+            const weekly = Object.entries(quests).filter(([,q]) => q.type === 'weekly');
+            const events = Object.entries(quests)
+                .filter(([,q]) => q.type === 'event')
+                .sort((a, b) => {
+                    if (!a[1].endAt) return 1;
+                    if (!b[1].endAt) return -1;
+                    return new Date(a[1].endAt) - new Date(b[1].endAt);
                 });
-                newGameInput.value = '';
-            }
-        }
 
-        // ゲームを削除
-        function deleteGame(gameId) {
-            if (isInitialized) {
-                database.ref('games/' + gameId).remove();
-            }
-        }
+            const dailyDone = daily.filter(([,q]) => q.completed).length;
+            const weeklyDone = weekly.filter(([,q]) => q.completed).length;
+            const eventDone = events.filter(([,q]) => q.completed).length;
 
-        // クエストを追加
-        function addQuest(gameId, questName) {
-            if (questName.trim() && isInitialized) {
-                const newQuestId = database.ref('games/' + gameId + '/quests').push().key;
-                database.ref('games/' + gameId + '/quests/' + newQuestId).set({
-                    name: questName,
-                    completed: false
-                });
-            }
-        }
+            const resetLabel = game.dailyResetTime ? `毎日${game.dailyResetTime}` : '05:00';
+            const weeklyLabel = game.weeklyResetDay != null ? `毎週${DAYS[game.weeklyResetDay]}` : '未設定';
 
-        // クエストを削除
-        function deleteQuest(gameId, questId) {
-            if (isInitialized) {
-                database.ref('games/' + gameId + '/quests/' + questId).remove();
-            }
-        }
-
-        // クエスト完了状態を切り替え
-        function toggleQuestComplete(gameId, questId) {
-            const game = games.find(g => g.id === gameId);
-            if (game && game.quests && game.quests[questId]) {
-                const newState = !game.quests[questId].completed;
-                database.ref('games/' + gameId + '/quests/' + questId + '/completed').set(newState);
-            }
-        }
-
-        // すべてのクエストをリセット
-        function resetAllQuests() {
-            if (window.confirm('本当にすべてのクエストをリセットしますか？')) {
-                games.forEach(game => {
-                    if (game.quests) {
-                        Object.keys(game.quests).forEach(questId => {
-                            database.ref('games/' + game.id + '/quests/' + questId + '/completed').set(false);
-                        });
-                    }
-                });
-            }
-        }
-
-        // 画面を描画
-        function render() {
-            updateProgress();
-
-            if (games.length === 0) {
-                gamesList.innerHTML = '<div class="empty-message">ゲームを追加してみましょう</div>';
-                return;
-            }
-
-            gamesList.innerHTML = games.map(game => {
-                const quests = game.quests || {};
-                const questIds = Object.keys(quests);
-                const completedCount = questIds.filter(id => quests[id].completed).length;
-                const isExpanded = game.expanded || false;
-
-                return `
-                    <div class="game-card">
-                        <button class="game-header" onclick="toggleGameExpanded('${game.id}')">
-                            <div class="game-info">
-                                <div class="game-name">${escapeHtml(game.name)}</div>
-                                <div class="game-progress">${completedCount}/${questIds.length} 完了</div>
+            return `
+            <div class="game-card">
+                <div class="game-header" id="header-${game.id}">
+                    <div class="game-title-area" onclick="toggleGameBody('${game.id}')">
+                        <div class="game-name">${esc(game.name)}</div>
+                        <div class="game-meta">
+                            <span class="game-meta-item">🌅 ${resetLabel}</span>
+                            <span class="game-meta-item">📅 ${weeklyLabel}</span>
+                        </div>
+                    </div>
+                    <div class="game-actions">
+                        <button class="icon-btn" onclick="moveUp('${game.id}')" ${idx===0?'disabled':''} title="上へ">⬆️</button>
+                        <button class="icon-btn" onclick="moveDown('${game.id}')" ${idx===sorted.length-1?'disabled':''} title="下へ">⬇️</button>
+                        <button class="icon-btn" onclick="openSettingsModal('${game.id}')" title="設定">⚙️</button>
+                        <button class="icon-btn" onclick="showHistory('${game.id}')" title="履歴">📋</button>
+                        <button class="icon-btn delete" onclick="deleteGame('${game.id}')" title="削除">🗑️</button>
+                        <button class="expand-btn" id="expand-btn-${game.id}" onclick="toggleGameBody('${game.id}')">▼ 開く</button>
+                    </div>
+                </div>
+                <div class="game-body" id="body-${game.id}">
+                    <!-- デイリー -->
+                    <div class="quest-section">
+                        <div class="section-header" onclick="toggleSection('${game.id}', 'daily')">
+                            <div class="section-title daily">
+                                🌅 デイリー
+                                <span class="section-badge daily">${dailyDone}/${daily.length}</span>
                             </div>
-                            <div class="game-actions">
-                                <button class="delete-game-btn" onclick="event.stopPropagation(); deleteGame('${game.id}')">🗑️</button>
-                                <span class="expand-icon ${isExpanded ? 'rotated' : ''}">▼</span>
-                            </div>
-                        </button>
-                        <div class="quests-section ${isExpanded ? 'active' : ''}">
-                            <div class="quests-list">
-                                ${questIds.map(questId => {
-                                    const quest = quests[questId];
-                                    return `
-                                        <div class="quest-item">
-                                            <input type="checkbox" class="quest-checkbox" ${quest.completed ? 'checked' : ''} onchange="toggleQuestComplete('${game.id}', '${questId}')">
-                                            <span class="quest-name ${quest.completed ? 'completed' : ''}">${escapeHtml(quest.name)}</span>
-                                            <button class="delete-quest-btn" onclick="deleteQuest('${game.id}', '${questId}')">🗑️</button>
-                                        </div>
-                                    `;
-                                }).join('')}
-                            </div>
+                            <span class="section-chevron" id="chevron-${game.id}-daily">▼</span>
+                        </div>
+                        <div class="section-content" id="section-${game.id}-daily">
+                            ${daily.map(([qid, q]) => `
+                                <div class="quest-item">
+                                    <input type="checkbox" class="quest-checkbox" ${q.completed?'checked':''} onchange="toggleQuest('${game.id}','${qid}')">
+                                    <div class="quest-info">
+                                        <div class="quest-name ${q.completed?'completed':''}">${esc(q.name)}</div>
+                                    </div>
+                                    <button class="delete-quest-btn" onclick="deleteQuest('${game.id}','${qid}')">🗑️</button>
+                                </div>
+                            `).join('')}
                             <div class="add-quest-form">
-                                <input type="text" placeholder="クエスト名を入力" id="quest-input-${game.id}" onkeypress="handleQuestKeypress(event, '${game.id}')">
-                                <button class="add-quest-btn" onclick="handleAddQuest('${game.id}')">➕</button>
+                                <div class="add-quest-row">
+                                    <input type="text" id="quest-input-${game.id}-daily" placeholder="デイリークエストを追加" onkeypress="if(event.key==='Enter') addQuest('${game.id}','daily')">
+                                    <button class="add-quest-btn-sm" onclick="addQuest('${game.id}','daily')">➕</button>
+                                </div>
                             </div>
                         </div>
                     </div>
-                `;
-            }).join('');
-        }
+                    <!-- ウィークリー -->
+                    <div class="quest-section">
+                        <div class="section-header" onclick="toggleSection('${game.id}', 'weekly')">
+                            <div class="section-title weekly">
+                                📅 ウィークリー
+                                <span class="section-badge weekly">${weeklyDone}/${weekly.length}</span>
+                            </div>
+                            <span class="section-chevron" id="chevron-${game.id}-weekly">▼</span>
+                        </div>
+                        <div class="section-content" id="section-${game.id}-weekly">
+                            ${weekly.map(([qid, q]) => `
+                                <div class="quest-item">
+                                    <input type="checkbox" class="quest-checkbox" ${q.completed?'checked':''} onchange="toggleQuest('${game.id}','${qid}')">
+                                    <div class="quest-info">
+                                        <div class="quest-name ${q.completed?'completed':''}">${esc(q.name)}</div>
+                                    </div>
+                                    <button class="delete-quest-btn" onclick="deleteQuest('${game.id}','${qid}')">🗑️</button>
+                                </div>
+                            `).join('')}
+                            <div class="add-quest-form">
+                                <div class="add-quest-row">
+                                    <input type="text" id="quest-input-${game.id}-weekly" placeholder="ウィークリークエストを追加" onkeypress="if(event.key==='Enter') addQuest('${game.id}','weekly')">
+                                    <button class="add-quest-btn-sm" onclick="addQuest('${game.id}','weekly')">➕</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- イベント -->
+                    <div class="quest-section">
+                        <div class="section-header" onclick="toggleSection('${game.id}', 'event')">
+                            <div class="section-title event">
+                                🎪 イベント
+                                <span class="section-badge event">${eventDone}/${events.length}</span>
+                            </div>
+                            <span class="section-chevron" id="chevron-${game.id}-event">▼</span>
+                        </div>
+                        <div class="section-content" id="section-${game.id}-event">
+                            ${events.map(([qid, q]) => {
+                                const { label, cls } = getEventTimeLabel(q.endAt);
+                                const timeStr = [
+                                    q.startAt ? `開始: ${new Date(q.startAt).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}` : '',
+                                    q.endAt ? `終了: ${new Date(q.endAt).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}` : ''
+                                ].filter(Boolean).join(' / ');
+                                return `
+                                <div class="quest-item">
+                                    <input type="checkbox" class="quest-checkbox" ${q.completed?'checked':''} onchange="toggleQuest('${game.id}','${qid}')">
+                                    <div class="quest-info">
+                                        <div class="quest-name ${q.completed?'completed':''}">${esc(q.name)}</div>
+                                        ${timeStr ? `<div class="quest-event-time ${cls}">${timeStr} ${label ? `(${label})` : ''}</div>` : ''}
+                                    </div>
+                                    <button class="delete-quest-btn" onclick="deleteQuest('${game.id}','${qid}')">🗑️</button>
+                                </div>`;
+                            }).join('')}
+                            <div class="add-quest-form">
+                                <div class="add-quest-row">
+                                    <input type="text" id="quest-input-${game.id}-event" placeholder="イベントクエストを追加" onkeypress="if(event.key==='Enter') addQuest('${game.id}','event')">
+                                    <button class="add-quest-btn-sm" onclick="addQuest('${game.id}','event')">➕</button>
+                                </div>
+                                <div class="add-quest-event-row">
+                                    <input type="datetime-local" id="quest-start-${game.id}" placeholder="開始日時">
+                                    <input type="datetime-local" id="quest-end-${game.id}" placeholder="終了日時">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        }).join('');
+    }
 
-        // ゲームの展開状態を切り替え
-        function toggleGameExpanded(gameId) {
-            const game = games.find(g => g.id === gameId);
-            if (game) {
-                game.expanded = !game.expanded;
-                render();
-            }
-        }
+    function esc(text) {
+        const d = document.createElement('div');
+        d.textContent = text;
+        return d.innerHTML;
+    }
 
-        // クエスト追加時の Enter キー処理
-        function handleQuestKeypress(e, gameId) {
-            if (e.key === 'Enter') {
-                handleAddQuest(gameId);
-            }
-        }
+    // Enter キー
+    document.getElementById('newGameInput').addEventListener('keypress', e => {
+        if (e.key === 'Enter') addGame();
+    });
 
-        // クエスト追加の処理
-        function handleAddQuest(gameId) {
-            const input = document.getElementById(`quest-input-${gameId}`);
-            const questName = input.value;
-            if (questName.trim()) {
-                addQuest(gameId, questName);
-                input.value = '';
-            }
-        }
-
-        // HTML エスケープ
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        // イベントリスナー
-        addGameBtn.addEventListener('click', addGame);
-        newGameInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') addGame();
-        });
-        resetBtn.addEventListener('click', resetAllQuests);
-
-        // 初期化
-        loadGamesFromFirebase();
-    </script>
+    // 起動
+    init();
+</script>
 </body>
 </html>
