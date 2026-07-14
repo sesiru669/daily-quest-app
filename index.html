@@ -237,6 +237,55 @@
             gap: 0.2rem;
         }
 
+        /* 完了バッジ */
+        .completion-badges {
+            display: flex;
+            gap: 0.25rem;
+            flex-wrap: wrap;
+            margin-top: 0.25rem;
+        }
+
+        .badge {
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 0.1rem 0.35rem;
+            border-radius: 0.25rem;
+            white-space: nowrap;
+        }
+
+        .badge-daily-done {
+            background: var(--primary);
+            color: white;
+        }
+
+        .badge-weekly-done {
+            background: var(--weekly);
+            color: white;
+        }
+
+        .badge-event-done {
+            background: var(--event);
+            color: white;
+        }
+
+        .badge-daily-partial {
+            background: var(--primary-light);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+
+        .badge-weekly-partial {
+            background: var(--weekly-light);
+            color: var(--weekly);
+            border: 1px solid var(--weekly);
+        }
+
+        .badge-event-partial {
+            background: var(--event-light);
+            color: var(--event);
+            border: 1px solid var(--event);
+        }
+
         .game-actions {
             display: flex;
             align-items: center;
@@ -626,6 +675,7 @@
 <!-- Firebase SDK (Compat) -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
 <script>
     // ===== Firebase 設定 =====
@@ -675,19 +725,26 @@
 
     // ===== 初期化 =====
     function init() {
-        db.ref('games').on('value', snap => {
-            const data = snap.val() || {};
-            games = Object.keys(data).map(id => ({ id, ...data[id] }));
-            // 古いデータの移行処理
-            migrateOldData(games);
-            games.forEach((g, i) => { if (g.order == null) db.ref(`games/${g.id}/order`).set(i); });
-            isReady = true;
-            document.getElementById('syncStatus').textContent = '✅ 同期済み';
-            setTimeout(() => document.getElementById('syncStatus').textContent = '', 3000);
-            checkAutoReset();
-            render();
-        }, err => {
-            document.getElementById('syncStatus').textContent = '⚠️ ' + err.message;
+        // 匿名認証でサインイン
+        firebase.auth().signInAnonymously().then(() => {
+            document.getElementById('syncStatus').textContent = '🔒 認証済み';
+            // 認証後にデータを読み込む
+            db.ref('games').on('value', snap => {
+                const data = snap.val() || {};
+                games = Object.keys(data).map(id => ({ id, ...data[id] }));
+                // 古いデータの移行処理
+                migrateOldData(games);
+                games.forEach((g, i) => { if (g.order == null) db.ref(`games/${g.id}/order`).set(i); });
+                isReady = true;
+                document.getElementById('syncStatus').textContent = '✅ 同期済み';
+                setTimeout(() => document.getElementById('syncStatus').textContent = '', 3000);
+                checkAutoReset();
+                render();
+            }, err => {
+                document.getElementById('syncStatus').textContent = '⚠️ ' + err.message;
+            });
+        }).catch(err => {
+            document.getElementById('syncStatus').textContent = '⚠️ 認証エラー: ' + err.message;
         });
     }
 
@@ -1043,6 +1100,11 @@
                 <div class="game-header" id="header-${game.id}">
                     <div class="game-title-area" onclick="toggleGameBody('${game.id}')">
                         <div class="game-name">${esc(game.name)}</div>
+                        <div class="completion-badges">
+                            ${daily.length > 0 ? (dailyDone === daily.length ? '<span class="badge badge-daily-done">デ完</span>' : '<span class="badge badge-daily-partial">デ' + dailyDone + '/' + daily.length + '</span>') : ''}
+                            ${weekly.length > 0 ? (weeklyDone === weekly.length ? '<span class="badge badge-weekly-done">週完</span>' : '<span class="badge badge-weekly-partial">週' + weeklyDone + '/' + weekly.length + '</span>') : ''}
+                            ${events.length > 0 ? (eventDone === events.length ? '<span class="badge badge-event-done">イベ完</span>' : '<span class="badge badge-event-partial">イベ' + eventDone + '/' + events.length + '</span>') : ''}
+                        </div>
                         <div class="game-meta">
                             <span class="game-meta-item">🌅 ${resetLabel}</span>
                             <span class="game-meta-item">📅 ${weeklyLabel}</span>
