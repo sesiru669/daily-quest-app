@@ -237,6 +237,51 @@
             gap: 0.2rem;
         }
 
+        /* 一括チェックボタン */
+        .bulk-check-btn {
+            padding: 0.2rem 0.5rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            border-radius: 0.3rem;
+            border: none;
+            cursor: pointer;
+            transition: all 150ms;
+            white-space: nowrap;
+        }
+
+        .bulk-check-btn.daily {
+            background: var(--primary-light);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+
+        .bulk-check-btn.daily:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .bulk-check-btn.weekly {
+            background: var(--weekly-light);
+            color: var(--weekly);
+            border: 1px solid var(--weekly);
+        }
+
+        .bulk-check-btn.weekly:hover {
+            background: var(--weekly);
+            color: white;
+        }
+
+        .bulk-check-btn.event {
+            background: var(--event-light);
+            color: var(--event);
+            border: 1px solid var(--event);
+        }
+
+        .bulk-check-btn.event:hover {
+            background: var(--event);
+            color: white;
+        }
+
         /* 完了バッジ */
         .completion-badges {
             display: flex;
@@ -930,6 +975,26 @@
         render();
     }
 
+    // ===== 一括チェック =====
+    function bulkCheck(gameId, type) {
+        const game = games.find(g => g.id === gameId);
+        if (!game || !game.quests) return;
+        const targets = Object.entries(game.quests).filter(([, q]) => q.type === type);
+        if (!targets.length) return;
+        // 全完了かどうか確認
+        const allDone = targets.every(([, q]) => q.completed);
+        // 全完了なら全解除、そうでなければ全完了
+        const newState = !allDone;
+        targets.forEach(([qid]) => {
+            db.ref(`games/${gameId}/quests/${qid}/completed`).set(newState);
+            if (newState) {
+                db.ref(`games/${gameId}/quests/${qid}/completedAt`).set(new Date().toISOString());
+            } else {
+                db.ref(`games/${gameId}/quests/${qid}/completedAt`).remove();
+            }
+        });
+    }
+
     // ===== 設定モーダル =====
     function openSettingsModal(gameId) {
         const game = games.find(g => g.id === gameId);
@@ -1122,12 +1187,13 @@
                 <div class="game-body" id="body-${game.id}">
                     <!-- デイリー -->
                     <div class="quest-section">
-                        <div class="section-header" onclick="toggleSection('${game.id}', 'daily')">
-                            <div class="section-title daily">
+                        <div class="section-header">
+                            <div class="section-title daily" onclick="toggleSection('${game.id}', 'daily')" style="flex:1;cursor:pointer">
                                 🌅 デイリー
                                 <span class="section-badge daily">${dailyDone}/${daily.length}</span>
                             </div>
-                            <span class="section-chevron" id="chevron-${game.id}-daily">▼</span>
+                            ${daily.length > 0 ? `<button class="bulk-check-btn daily" onclick="bulkCheck('${game.id}', 'daily')">${daily.every(([,q]) => q.completed) ? '✅ 全解除' : '✅ 全完了'}</button>` : ''}
+                            <span class="section-chevron" id="chevron-${game.id}-daily" onclick="toggleSection('${game.id}', 'daily')" style="cursor:pointer;margin-left:0.5rem">▼</span>
                         </div>
                         <div class="section-content" id="section-${game.id}-daily">
                             ${daily.map(([qid, q]) => `
@@ -1149,12 +1215,13 @@
                     </div>
                     <!-- ウィークリー -->
                     <div class="quest-section">
-                        <div class="section-header" onclick="toggleSection('${game.id}', 'weekly')">
-                            <div class="section-title weekly">
+                        <div class="section-header">
+                            <div class="section-title weekly" onclick="toggleSection('${game.id}', 'weekly')" style="flex:1;cursor:pointer">
                                 📅 ウィークリー
                                 <span class="section-badge weekly">${weeklyDone}/${weekly.length}</span>
                             </div>
-                            <span class="section-chevron" id="chevron-${game.id}-weekly">▼</span>
+                            ${weekly.length > 0 ? `<button class="bulk-check-btn weekly" onclick="bulkCheck('${game.id}', 'weekly')">${weekly.every(([,q]) => q.completed) ? '✅ 全解除' : '✅ 全完了'}</button>` : ''}
+                            <span class="section-chevron" id="chevron-${game.id}-weekly" onclick="toggleSection('${game.id}', 'weekly')" style="cursor:pointer;margin-left:0.5rem">▼</span>
                         </div>
                         <div class="section-content" id="section-${game.id}-weekly">
                             ${weekly.map(([qid, q]) => `
@@ -1176,12 +1243,13 @@
                     </div>
                     <!-- イベント -->
                     <div class="quest-section">
-                        <div class="section-header" onclick="toggleSection('${game.id}', 'event')">
-                            <div class="section-title event">
+                        <div class="section-header">
+                            <div class="section-title event" onclick="toggleSection('${game.id}', 'event')" style="flex:1;cursor:pointer">
                                 🎪 イベント
                                 <span class="section-badge event">${eventDone}/${events.length}</span>
                             </div>
-                            <span class="section-chevron" id="chevron-${game.id}-event">▼</span>
+                            ${events.length > 0 ? `<button class="bulk-check-btn event" onclick="bulkCheck('${game.id}', 'event')">${events.every(([,q]) => q.completed) ? '✅ 全解除' : '✅ 全完了'}</button>` : ''}
+                            <span class="section-chevron" id="chevron-${game.id}-event" onclick="toggleSection('${game.id}', 'event')" style="cursor:pointer;margin-left:0.5rem">▼</span>
                         </div>
                         <div class="section-content" id="section-${game.id}-event">
                             ${events.map(([qid, q]) => {
