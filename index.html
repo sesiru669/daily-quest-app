@@ -290,7 +290,7 @@
         .quest-item {
             display: flex;
             align-items: center;
-            gap: 0.625rem;
+            gap: 0.5rem;
             padding: 0.5rem 0.625rem;
             background: white;
             border-radius: 0.5rem;
@@ -300,6 +300,48 @@
         }
         .quest-item:hover { background: #f9fafb; }
         .quest-item:last-child { margin-bottom: 0; }
+
+        .quest-order-btns {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            flex-shrink: 0;
+        }
+        .quest-order-btn {
+            padding: 0;
+            width: 1.1rem;
+            height: 0.9rem;
+            background: none;
+            border: none;
+            color: #b0b6c3;
+            cursor: pointer;
+            font-size: 0.6rem;
+            line-height: 0.9rem;
+            transition: color 150ms;
+        }
+        .quest-order-btn:hover { color: var(--primary); }
+        .quest-order-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+
+        .quest-edit-btn {
+            padding: 0.25rem;
+            background: none;
+            border: none;
+            color: #d1d5db;
+            cursor: pointer;
+            transition: color 150ms;
+            flex-shrink: 0;
+            font-size: 0.85rem;
+        }
+        .quest-edit-btn:hover { color: var(--primary); }
+
+        .quest-name-input {
+            flex: 1;
+            font-size: 0.875rem;
+            padding: 0.2rem 0.4rem;
+            border: 1px solid var(--primary);
+            border-radius: 0.3rem;
+            outline: none;
+        }
 
         .quest-checkbox { width: 1.125rem; height: 1.125rem; accent-color: var(--primary); cursor: pointer; flex-shrink: 0; }
         .quest-info { flex: 1; min-width: 0; }
@@ -322,6 +364,41 @@
             font-size: 0.875rem;
         }
         .delete-quest-btn:hover { color: var(--danger); }
+
+        .quest-order-btn {
+            padding: 0.2rem;
+            background: none;
+            border: none;
+            color: #c4c9d4;
+            cursor: pointer;
+            transition: color 150ms;
+            flex-shrink: 0;
+            font-size: 0.8rem;
+            line-height: 1;
+        }
+        .quest-order-btn:hover { color: var(--primary); }
+        .quest-order-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+
+        .quest-edit-btn {
+            padding: 0.25rem;
+            background: none;
+            border: none;
+            color: #d1d5db;
+            cursor: pointer;
+            transition: color 150ms;
+            flex-shrink: 0;
+            font-size: 0.85rem;
+        }
+        .quest-edit-btn:hover { color: var(--primary); }
+
+        .quest-name-edit-input {
+            flex: 1;
+            padding: 0.3rem 0.5rem;
+            border: 1px solid var(--primary);
+            border-radius: 0.3rem;
+            font-size: 0.875rem;
+            outline: none;
+        }
 
         .add-quest-form { margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.375rem; }
         .add-quest-row { display: flex; gap: 0.375rem; }
@@ -548,10 +625,17 @@
         hasMigratedOnce = true;
         gamesList.forEach(game => {
             if (!game.quests) return;
+            // 種別ごとに order の無いクエストへ連番を付与
+            const typeCounters = { daily: 0, weekly: 0, event: 0 };
             Object.entries(game.quests).forEach(([qid, q]) => {
                 if (!q.type) {
                     db.ref(`games/${game.id}/quests/${qid}/type`).set('daily');
                 }
+                const t = q.type || 'daily';
+                if (q.qorder == null) {
+                    db.ref(`games/${game.id}/quests/${qid}/qorder`).set(typeCounters[t] || 0);
+                }
+                typeCounters[t] = (typeCounters[t] || 0) + 1;
             });
             if (game.order == null) {
                 db.ref(`games/${game.id}/order`).set(0);
@@ -667,7 +751,13 @@
         const name = inputEl?.value.trim();
         if (!name) return;
 
-        const questData = { name, type, completed: false, addedAt: new Date().toISOString() };
+        // 同じ種別内での順序を末尾に設定
+        const game = games.find(g => g.id === gameId);
+        const sameTypeCount = game && game.quests
+            ? Object.values(game.quests).filter(q => q.type === type).length
+            : 0;
+
+        const questData = { name, type, completed: false, qorder: sameTypeCount, addedAt: new Date().toISOString() };
 
         if (type === 'event') {
             const startEl = document.getElementById(`quest-start-${gameId}`);
@@ -778,6 +868,86 @@
             updates[`games/${gameId}/quests/${qid}/completedAt`] = newState ? new Date().toISOString() : null;
         });
         db.ref().update(updates);
+    }
+
+    // ===== クエストの並べ替え（同じ種別内で入れ替え） =====
+    function getOrderedQuestList(game, type) {
+        const quests = game.quests || {};
+        return Object.entries(quests)
+            .filter(([, q]) => q.type === type)
+            .sort((a, b) => {
+                const oa = a[1].qorder != null ? a[1].qorder : 0;
+                const ob = b[1].qorder != null ? b[1].qorder : 0;
+                if (oa !== ob) return oa - ob;
+                // qorder未設定の場合は追加日時順にフォールバック
+                return (a[1].addedAt || '').localeCompare(b[1].addedAt || '');
+            });
+    }
+
+    function moveQuestUp(gameId, type, questId) {
+        const game = games.find(g => g.id === gameId);
+        if (!game) return;
+        const list = getOrderedQuestList(game, type);
+        const idx = list.findIndex(([qid]) => qid === questId);
+        if (idx <= 0) return;
+        const updates = {};
+        const [idA] = list[idx];
+        const [idB] = list[idx - 1];
+        const orderA = idx;
+        const orderB = idx - 1;
+        updates[`games/${gameId}/quests/${idA}/qorder`] = orderB;
+        updates[`games/${gameId}/quests/${idB}/qorder`] = orderA;
+        // 他のクエストにも順序を振り直して整合性を保つ
+        list.forEach(([qid], i) => {
+            if (qid !== idA && qid !== idB) {
+                updates[`games/${gameId}/quests/${qid}/qorder`] = i;
+            }
+        });
+        db.ref().update(updates);
+    }
+
+    function moveQuestDown(gameId, type, questId) {
+        const game = games.find(g => g.id === gameId);
+        if (!game) return;
+        const list = getOrderedQuestList(game, type);
+        const idx = list.findIndex(([qid]) => qid === questId);
+        if (idx < 0 || idx >= list.length - 1) return;
+        const updates = {};
+        const [idA] = list[idx];
+        const [idB] = list[idx + 1];
+        const orderA = idx;
+        const orderB = idx + 1;
+        updates[`games/${gameId}/quests/${idA}/qorder`] = orderB;
+        updates[`games/${gameId}/quests/${idB}/qorder`] = orderA;
+        list.forEach(([qid], i) => {
+            if (qid !== idA && qid !== idB) {
+                updates[`games/${gameId}/quests/${qid}/qorder`] = i;
+            }
+        });
+        db.ref().update(updates);
+    }
+
+    // ===== クエスト名の編集 =====
+    function startEditQuest(gameId, questId) {
+        const nameEl = document.getElementById(`quest-name-${gameId}-${questId}`);
+        const editBtn = document.getElementById(`quest-editbtn-${gameId}-${questId}`);
+        if (!nameEl) return;
+        const currentName = nameEl.dataset.rawName || nameEl.textContent;
+        nameEl.outerHTML = `<input type="text" class="quest-name-edit-input" id="quest-name-${gameId}-${questId}" value="${currentName.replace(/"/g,'&quot;')}" onkeypress="if(event.key==='Enter') saveEditQuest('${gameId}','${questId}')" onblur="saveEditQuest('${gameId}','${questId}')">`;
+        const input = document.getElementById(`quest-name-${gameId}-${questId}`);
+        if (input) { input.focus(); input.select(); }
+        if (editBtn) editBtn.style.display = 'none';
+    }
+
+    function saveEditQuest(gameId, questId) {
+        const input = document.getElementById(`quest-name-${gameId}-${questId}`);
+        if (!input) return;
+        const newName = input.value.trim();
+        if (newName) {
+            db.ref(`games/${gameId}/quests/${questId}/name`).set(newName);
+        } else {
+            render();
+        }
     }
 
     function openSettingsModal(gameId) {
@@ -921,15 +1091,10 @@
 
         document.getElementById('gamesList').innerHTML = sorted.map((game, idx) => {
             const quests = game.quests || {};
-            const daily = Object.entries(quests).filter(([,q]) => q.type === 'daily');
-            const weekly = Object.entries(quests).filter(([,q]) => q.type === 'weekly');
-            const events = Object.entries(quests)
-                .filter(([,q]) => q.type === 'event')
-                .sort((a, b) => {
-                    if (!a[1].endAt) return 1;
-                    if (!b[1].endAt) return -1;
-                    return new Date(a[1].endAt) - new Date(b[1].endAt);
-                });
+            const daily = getOrderedQuestList(game, 'daily');
+            const weekly = getOrderedQuestList(game, 'weekly');
+            const events = getOrderedQuestList(game, 'event');
+            // イベントは残り時間が近い順に見せたい場合はこちらを使う（手動並べ替えを優先する場合は上のgetOrderedQuestListのみでOK）
 
             const dailyDone = daily.filter(([,q]) => q.completed).length;
             const weeklyDone = weekly.filter(([,q]) => q.completed).length;
@@ -973,12 +1138,17 @@
                             <span class="section-chevron" id="chevron-${game.id}-daily" onclick="toggleSection('${game.id}', 'daily')" style="cursor:pointer;margin-left:0.5rem">▼</span>
                         </div>
                         <div class="section-content" id="section-${game.id}-daily">
-                            ${daily.map(([qid, q]) => `
+                            ${daily.map(([qid, q], qidx) => `
                                 <div class="quest-item">
+                                    <div class="quest-order-btns">
+                                        <button class="quest-order-btn" onclick="moveQuestUp('${game.id}','daily','${qid}')" ${qidx===0?'disabled':''} title="上へ">▲</button>
+                                        <button class="quest-order-btn" onclick="moveQuestDown('${game.id}','daily','${qid}')" ${qidx===daily.length-1?'disabled':''} title="下へ">▼</button>
+                                    </div>
                                     <input type="checkbox" class="quest-checkbox" ${q.completed?'checked':''} onchange="toggleQuest('${game.id}','${qid}')">
                                     <div class="quest-info">
-                                        <div class="quest-name ${q.completed?'completed':''}">${esc(q.name)}</div>
+                                        <div class="quest-name ${q.completed?'completed':''}" id="quest-name-${game.id}-${qid}" data-raw-name="${esc(q.name)}">${esc(q.name)}</div>
                                     </div>
+                                    <button class="quest-edit-btn" id="quest-editbtn-${game.id}-${qid}" onclick="startEditQuest('${game.id}','${qid}')" title="名前を編集">✏️</button>
                                     <button class="delete-quest-btn" onclick="deleteQuest('${game.id}','${qid}')">🗑️</button>
                                 </div>
                             `).join('')}
@@ -1000,12 +1170,17 @@
                             <span class="section-chevron" id="chevron-${game.id}-weekly" onclick="toggleSection('${game.id}', 'weekly')" style="cursor:pointer;margin-left:0.5rem">▼</span>
                         </div>
                         <div class="section-content" id="section-${game.id}-weekly">
-                            ${weekly.map(([qid, q]) => `
+                            ${weekly.map(([qid, q], qidx) => `
                                 <div class="quest-item">
+                                    <div class="quest-order-btns">
+                                        <button class="quest-order-btn" onclick="moveQuestUp('${game.id}','weekly','${qid}')" ${qidx===0?'disabled':''} title="上へ">▲</button>
+                                        <button class="quest-order-btn" onclick="moveQuestDown('${game.id}','weekly','${qid}')" ${qidx===weekly.length-1?'disabled':''} title="下へ">▼</button>
+                                    </div>
                                     <input type="checkbox" class="quest-checkbox" ${q.completed?'checked':''} onchange="toggleQuest('${game.id}','${qid}')">
                                     <div class="quest-info">
-                                        <div class="quest-name ${q.completed?'completed':''}">${esc(q.name)}</div>
+                                        <div class="quest-name ${q.completed?'completed':''}" id="quest-name-${game.id}-${qid}" data-raw-name="${esc(q.name)}">${esc(q.name)}</div>
                                     </div>
+                                    <button class="quest-edit-btn" id="quest-editbtn-${game.id}-${qid}" onclick="startEditQuest('${game.id}','${qid}')" title="名前を編集">✏️</button>
                                     <button class="delete-quest-btn" onclick="deleteQuest('${game.id}','${qid}')">🗑️</button>
                                 </div>
                             `).join('')}
@@ -1027,7 +1202,7 @@
                             <span class="section-chevron" id="chevron-${game.id}-event" onclick="toggleSection('${game.id}', 'event')" style="cursor:pointer;margin-left:0.5rem">▼</span>
                         </div>
                         <div class="section-content" id="section-${game.id}-event">
-                            ${events.map(([qid, q]) => {
+                            ${events.map(([qid, q], qidx) => {
                                 const { label, cls } = getEventTimeLabel(q.endAt);
                                 const timeStr = [
                                     q.startAt ? `開始: ${new Date(q.startAt).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}` : '',
@@ -1035,11 +1210,16 @@
                                 ].filter(Boolean).join(' / ');
                                 return `
                                 <div class="quest-item">
+                                    <div class="quest-order-btns">
+                                        <button class="quest-order-btn" onclick="moveQuestUp('${game.id}','event','${qid}')" ${qidx===0?'disabled':''} title="上へ">▲</button>
+                                        <button class="quest-order-btn" onclick="moveQuestDown('${game.id}','event','${qid}')" ${qidx===events.length-1?'disabled':''} title="下へ">▼</button>
+                                    </div>
                                     <input type="checkbox" class="quest-checkbox" ${q.completed?'checked':''} onchange="toggleQuest('${game.id}','${qid}')">
                                     <div class="quest-info">
-                                        <div class="quest-name ${q.completed?'completed':''}">${esc(q.name)}</div>
+                                        <div class="quest-name ${q.completed?'completed':''}" id="quest-name-${game.id}-${qid}" data-raw-name="${esc(q.name)}">${esc(q.name)}</div>
                                         ${timeStr ? `<div class="quest-event-time ${cls}">${timeStr} ${label ? `(${label})` : ''}</div>` : ''}
                                     </div>
+                                    <button class="quest-edit-btn" id="quest-editbtn-${game.id}-${qid}" onclick="startEditQuest('${game.id}','${qid}')" title="名前を編集">✏️</button>
                                     <button class="delete-quest-btn" onclick="deleteQuest('${game.id}','${qid}')">🗑️</button>
                                 </div>`;
                             }).join('')}
