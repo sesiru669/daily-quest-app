@@ -296,10 +296,32 @@
             border-radius: 0.5rem;
             margin-bottom: 0.375rem;
             border: 1px solid var(--border);
-            transition: background 150ms;
+            transition: background 150ms, border-color 150ms;
         }
         .quest-item:hover { background: #f9fafb; }
         .quest-item:last-child { margin-bottom: 0; }
+
+        /* 完了状態の背景色（デイリー=薄い青／ウィークリー=濃い青） */
+        .quest-item.done-daily {
+            background: #dbeafe;
+            border-color: #93c5fd;
+        }
+        .quest-item.done-daily:hover { background: #cfe4fd; }
+
+        .quest-item.done-weekly {
+            background: #1e3a8a;
+            border-color: #1e3a8a;
+        }
+        .quest-item.done-weekly:hover { background: #1c357e; }
+        .quest-item.done-weekly .quest-name { color: #dbeafe; }
+        .quest-item.done-weekly .quest-name.completed { color: #93b8f5; }
+        .quest-item.done-weekly .quest-checkbox { accent-color: #93c5fd; }
+        .quest-item.done-weekly .quest-order-btn { color: #93c5fd; }
+        .quest-item.done-weekly .quest-order-btn:hover { color: #dbeafe; }
+        .quest-item.done-weekly .quest-edit-btn { color: #93c5fd; }
+        .quest-item.done-weekly .quest-edit-btn:hover { color: white; }
+        .quest-item.done-weekly .delete-quest-btn { color: #6d93d6; }
+        .quest-item.done-weekly .delete-quest-btn:hover { color: #fca5a5; }
 
         .quest-order-btns {
             display: flex;
@@ -1139,7 +1161,7 @@
                         </div>
                         <div class="section-content" id="section-${game.id}-daily">
                             ${daily.map(([qid, q], qidx) => `
-                                <div class="quest-item">
+                                <div class="quest-item ${q.completed?'done-daily':''}">
                                     <div class="quest-order-btns">
                                         <button class="quest-order-btn" onclick="moveQuestUp('${game.id}','daily','${qid}')" ${qidx===0?'disabled':''} title="上へ">▲</button>
                                         <button class="quest-order-btn" onclick="moveQuestDown('${game.id}','daily','${qid}')" ${qidx===daily.length-1?'disabled':''} title="下へ">▼</button>
@@ -1171,7 +1193,7 @@
                         </div>
                         <div class="section-content" id="section-${game.id}-weekly">
                             ${weekly.map(([qid, q], qidx) => `
-                                <div class="quest-item">
+                                <div class="quest-item ${q.completed?'done-weekly':''}">
                                     <div class="quest-order-btns">
                                         <button class="quest-order-btn" onclick="moveQuestUp('${game.id}','weekly','${qid}')" ${qidx===0?'disabled':''} title="上へ">▲</button>
                                         <button class="quest-order-btn" onclick="moveQuestDown('${game.id}','weekly','${qid}')" ${qidx===weekly.length-1?'disabled':''} title="下へ">▼</button>
