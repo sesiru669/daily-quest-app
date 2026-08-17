@@ -57,6 +57,15 @@
         .header h1 { font-size: 1.375rem; font-weight: 700; color: var(--text); }
         @media (min-width: 640px) { .header h1 { font-size: 1.75rem; } }
 
+        .version-tag {
+            font-size: 0.65rem;
+            color: #b8bfcc;
+            font-weight: 500;
+            margin-top: -0.4rem;
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.02em;
+        }
+
         .header-actions { display: flex; gap: 0.5rem; align-items: center; }
 
         .csv-btn {
@@ -542,6 +551,7 @@
                 <button class="reset-all-btn" onclick="resetAllQuests()">🔄 全リセット</button>
             </div>
         </div>
+        <div class="version-tag">v1.1.0</div>
         <div class="progress-bar-wrap">
             <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
         </div>
